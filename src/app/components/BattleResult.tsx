@@ -7,13 +7,12 @@ import { Category } from '../App';
 type Props = {
   category: Category;
   myValue: number;
-  opponentValue: number;
   result: 'win' | 'lose' | 'draw';
   onReset: () => void;
 };
 
-export function BattleResult({ category, myValue, opponentValue, result, onReset }: Props) {
-  const [showValues, setShowValues] = useState(false);
+export function BattleResult({ category, myValue, result, onReset }: Props) {
+  const [showCards, setShowCards] = useState(false);
 
   useEffect(() => {
     if (result === 'win') {
@@ -23,8 +22,7 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
         origin: { y: 0.6 },
       });
     }
-
-    setTimeout(() => setShowValues(true), 500);
+    setTimeout(() => setShowCards(true), 500);
   }, [result]);
 
   const getResultConfig = () => {
@@ -63,7 +61,6 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
   };
 
   const config = getResultConfig();
-  const difference = Math.abs(myValue - opponentValue);
 
   const handleShare = () => {
     const text = `我在匿名比较器的${category.title}对战中${
@@ -99,7 +96,7 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
       </div>
 
       <div className={`bg-gradient-to-br ${config.bgColor} p-8 rounded-2xl mb-6`}>
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4">
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -110,15 +107,13 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
           >
             <div className="text-4xl mb-2">👤</div>
             <p className="text-sm text-gray-600 mb-2">你</p>
-            {showValues && (
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`text-2xl ${result === 'win' ? 'text-green-600' : 'text-gray-700'}`}
-              >
-                {myValue}
-                <span className="text-sm ml-1">{category.unit}</span>
-              </motion.p>
+            {showCards && (
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                <p className={`text-2xl ${result === 'win' ? 'text-green-600' : 'text-gray-700'}`}>
+                  {myValue}
+                  <span className="text-sm ml-1">{category.unit}</span>
+                </p>
+              </motion.div>
             )}
           </motion.div>
 
@@ -136,46 +131,17 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
           >
             <div className="text-4xl mb-2">🎭</div>
             <p className="text-sm text-gray-600 mb-2">对手</p>
-            {showValues && (
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`text-2xl ${result === 'lose' ? 'text-red-600' : 'text-gray-700'}`}
-              >
-                {opponentValue}
-                <span className="text-sm ml-1">{category.unit}</span>
-              </motion.p>
+            {showCards && (
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                <p className="text-2xl text-gray-400">🔒 保密</p>
+              </motion.div>
             )}
           </motion.div>
         </div>
-
-        {showValues && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white p-4 rounded-xl text-center"
-          >
-            <p className="text-sm text-gray-600 mb-1">差距</p>
-            <p className="text-3xl text-purple-600">
-              {difference}
-              <span className="text-lg ml-1">{category.unit}</span>
-            </p>
-          </motion.div>
-        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-purple-50 p-4 rounded-xl text-center">
-          <p className="text-sm text-gray-600 mb-1">对战结果</p>
-          <p className={`text-2xl ${config.textColor}`}>
-            {result === 'win' ? '✓ 胜' : result === 'lose' ? '✗ 败' : '= 平'}
-          </p>
-        </div>
-        <div className="bg-blue-50 p-4 rounded-xl text-center">
-          <p className="text-sm text-gray-600 mb-1">对战时长</p>
-          <p className="text-2xl text-blue-600">3.2s</p>
-        </div>
+      <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6 text-center text-sm text-gray-500">
+        🔒 隐私保护：对手的具体数值已加密，不会泄露给任何人
       </div>
 
       <div className="flex gap-3">
@@ -193,10 +159,6 @@ export function BattleResult({ category, myValue, opponentValue, result, onReset
           <RefreshCw size={20} />
           再战一局
         </button>
-      </div>
-
-      <div className="mt-6 text-center text-sm text-gray-500">
-        🔒 对战数据端到端加密 · 对手身份完全匿名
       </div>
     </motion.div>
   );

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CompareCategories } from './components/CompareCategories';
 import { CompareForm } from './components/CompareForm';
 import { CompareResult } from './components/CompareResult';
 import { ModeSelector } from './components/ModeSelector';
 import { BattleMatching } from './components/BattleMatching';
 import { BattleResult } from './components/BattleResult';
+import { InviteChallenge } from './components/InviteChallenge';
+import { InviteAccept } from './components/InviteAccept';
 
 export type Category = {
   id: string;
@@ -55,7 +57,7 @@ export const categories: Category[] = [
   },
 ];
 
-export type Mode = 'solo' | 'battle';
+export type Mode = 'solo' | 'battle' | 'invite';
 
 export type CompareState = {
   mode: Mode | null;
@@ -66,11 +68,18 @@ export type CompareState = {
 
 export type BattleState = {
   isMatching: boolean;
-  opponentValue: number | null;
   result: 'win' | 'lose' | 'draw' | null;
 };
 
+function readChallengeToken(): string | null {
+  const hash = window.location.hash;
+  const match = hash.match(/[#&]challenge=([^&]+)/);
+  return match ? match[1] : null;
+}
+
 export default function App() {
+  const [challengeToken, setChallengeToken] = useState<string | null>(() => readChallengeToken());
+
   const [state, setState] = useState<CompareState>({
     mode: null,
     category: null,
@@ -80,9 +89,17 @@ export default function App() {
 
   const [battleState, setBattleState] = useState<BattleState>({
     isMatching: false,
-    opponentValue: null,
     result: null,
   });
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const token = readChallengeToken();
+      setChallengeToken(token);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   const handleSelectMode = (mode: Mode) => {
     setState({ ...state, mode });
@@ -94,27 +111,48 @@ export default function App() {
 
   const handleCompare = (value: number) => {
     if (state.mode === 'solo') {
-      // 单人模式：计算百分位
       const percentile = calculatePercentile(state.category!.id, value);
       setState({ ...state, value, percentile });
-    } else {
-      // 对战模式：开始匹配
+    } else if (state.mode === 'battle') {
       setState({ ...state, value });
-      setBattleState({ isMatching: true, opponentValue: null, result: null });
+      setBattleState({ isMatching: true, result: null });
 
-      // 模拟匹配过程
       setTimeout(() => {
         const opponentValue = generateOpponentValue(state.category!, value);
         const result = value > opponentValue ? 'win' : value < opponentValue ? 'lose' : 'draw';
-        setBattleState({ isMatching: false, opponentValue, result });
+        setBattleState({ isMatching: false, result });
       }, 3000);
+    } else if (state.mode === 'invite') {
+      // Invite mode: show link generation screen with entered value
+      setState({ ...state, value });
     }
   };
 
   const handleReset = () => {
     setState({ mode: null, category: null, value: null, percentile: null });
-    setBattleState({ isMatching: false, opponentValue: null, result: null });
+    setBattleState({ isMatching: false, result: null });
   };
+
+  const handleClearChallenge = () => {
+    window.location.hash = '';
+    setChallengeToken(null);
+    handleReset();
+  };
+
+  // If there's an incoming challenge token, show the accept screen
+  if (challengeToken) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center mb-12">
+            <h1 className="text-5xl mb-4">🔐 匿名比较器</h1>
+            <p className="text-gray-600">基于加密技术的隐私比较平台 · 你的数据永不泄露</p>
+          </header>
+          <InviteAccept token={challengeToken} onClearChallenge={handleClearChallenge} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8">
@@ -164,9 +202,16 @@ export default function App() {
           <BattleResult
             category={state.category!}
             myValue={state.value!}
-            opponentValue={battleState.opponentValue!}
             result={battleState.result}
             onReset={handleReset}
+          />
+        )}
+
+        {state.mode === 'invite' && state.category && state.value !== null && (
+          <InviteChallenge
+            category={state.category}
+            value={state.value}
+            onBack={() => setState({ ...state, value: null })}
           />
         )}
       </div>
@@ -174,9 +219,7 @@ export default function App() {
   );
 }
 
-// 模拟统计计算（基于正态分布）
 function calculatePercentile(categoryId: string, value: number): number {
-  // 模拟数据分布的均值和标准差
   const distributions: Record<string, { mean: number; stdDev: number }> = {
     salary: { mean: 25, stdDev: 15 },
     height: { mean: 170, stdDev: 8 },
@@ -191,7 +234,6 @@ function calculatePercentile(categoryId: string, value: number): number {
   return Math.max(1, Math.min(99, Math.round(percentile)));
 }
 
-// 正态分布累积分布函数
 function normalCDF(x: number): number {
   const t = 1 / (1 + 0.2316419 * Math.abs(x));
   const d = 0.3989423 * Math.exp(-x * x / 2);
@@ -199,19 +241,14 @@ function normalCDF(x: number): number {
   return x > 0 ? 1 - p : p;
 }
 
-// 生成对手数值（基于用户数值附近的随机值，让对战更有悬念）
 function generateOpponentValue(category: Category, userValue: number): number {
-  // 在用户数值的 ±30% 范围内生成对手数值，让胜负更有悬念
   const range = userValue * 0.3;
   const min = Math.max(category.min, userValue - range);
   const max = Math.min(category.max, userValue + range);
-
-  // 生成随机值
   const opponentValue = min + Math.random() * (max - min);
 
-  // 根据类别返回合适的精度
   if (category.id === 'salary') {
-    return Math.round(opponentValue * 10) / 10; // 保留一位小数
+    return Math.round(opponentValue * 10) / 10;
   }
-  return Math.round(opponentValue); // 其他类别返回整数
+  return Math.round(opponentValue);
 }
