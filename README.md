@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Development Version** — Only **Invite PK** mode is fully functional at this time. Solo Mode and Random Battle are still under active development and may not work as expected.
+
 # 🔐 Anonymous Comparator
 
 <div align="center">
@@ -64,7 +67,7 @@ These are non-negotiable design rules — not features, but foundations:
 | The gap between values | ❌ Never shown |
 | Your raw data sent to a server | ❌ Never happens |
 
-> **Private comparison happens in the browsers.** The signaling service only helps peers find each other; raw values are not sent to the server.
+> **All computation happens locally in your browser.** Your data never leaves your device.
 
 ---
 
@@ -87,25 +90,24 @@ Styling        Tailwind CSS v4
 Animation      Motion (formerly Framer Motion)
 Icons          Lucide React
 Confetti FX    canvas-confetti
-Privacy Layer  WebRTC DataChannel + mpz wasm + Chou-Orlandi/KOS OT
+Privacy Layer  Web Crypto API / btoa · atob
 Build Tool     Vite
-Package Mgr    npm
+Package Mgr    pnpm
 ```
 
 ### How the Invite Link Works
 
-Invite links contain only a category id and a random room id:
+The challenger's value is base64-encoded and appended to the URL hash:
 
 ```
-https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwiciI6InJvb20taWQifQ
+https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwidiI6NTB9
                                 └─────────────────────────┘
-                                  base64({ c: "salary", r: "room-id" })
+                                  base64({ c: "salary", v: 50 })
 ```
 
 **Why this is private:**
-- The link does **not** contain either player's value
-- A lightweight signaling server relays WebRTC offer / answer / ICE messages
-- Browsers then compare over a WebRTC DataChannel using the mpz wasm protocol engine
+- URL hashes are **never sent to any server** (browser spec)
+- The comparison runs entirely in the recipient's browser
 - The result screen shows only Win / Lose / Draw — no raw values on either side
 
 ---
@@ -114,19 +116,10 @@ https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwiciI6InJvb20taWQifQ
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
-# Start the app and signaling server
-npm run dev:all
-
-# Run tests
-npm test
-
-# Build wasm + frontend
-npm run build
-
-# Smoke-test the invite flow in two browser pages
-npm run smoke:webrtc
+# Start the dev server
+pnpm dev
 ```
 
 ---
@@ -146,14 +139,6 @@ src/
         ├── BattleResult.tsx      # Battle outcome (privacy-safe)
         ├── InviteChallenge.tsx   # Generate & share challenge link
         └── InviteAccept.tsx      # Accept a challenge from a link
-server/
-└── signaling.mjs                 # WebRTC signaling relay
-wasm/
-└── mpz-compare/                  # SecureCompare-owned mpz wasm adapter
-src/app/protocol/
-├── webrtcChallenge.ts            # Invite room + WebRTC handshake
-├── mpzProtocolEngine.ts          # DataChannel byte pump into wasm
-└── challengeToken.ts             # Category + room token
 ```
 
 ---
@@ -166,7 +151,7 @@ src/app/protocol/
 
 **Zero friction** — no sign-up, no account, no tracking. Open the app and play.
 
-**Local-first comparison** — private values stay in the browsers. The only server-side piece in invite mode is the signaling relay needed to establish the peer-to-peer DataChannel.
+**Local-first** — the app works without a backend. All logic runs in the browser. There's nothing to breach.
 
 ---
 
@@ -176,8 +161,7 @@ src/app/protocol/
 - [ ] Persistent challenge links with expiry tokens
 - [ ] Leaderboard based on win streaks (anonymised)
 - [ ] QR code generation for in-person PK battles
-- [ ] TURN relay for difficult NAT environments
-- [ ] Security review of mpz OT parameters and browser threat model
+- [ ] True zero-knowledge proof implementation
 
 ---
 
