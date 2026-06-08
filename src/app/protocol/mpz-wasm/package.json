@@ -1,0 +1,15 @@
+{
+  "name": "securecompare-mpz-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "securecompare_mpz_wasm_bg.wasm",
+    "securecompare_mpz_wasm.js",
+    "securecompare_mpz_wasm.d.ts"
+  ],
+  "main": "securecompare_mpz_wasm.js",
+  "types": "securecompare_mpz_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

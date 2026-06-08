@@ -64,7 +64,7 @@ These are non-negotiable design rules — not features, but foundations:
 | The gap between values | ❌ Never shown |
 | Your raw data sent to a server | ❌ Never happens |
 
-> **All computation happens locally in your browser.** Your data never leaves your device.
+> **Private comparison happens in the browsers.** The signaling service only helps peers find each other; raw values are not sent to the server.
 
 ---
 
@@ -87,24 +87,25 @@ Styling        Tailwind CSS v4
 Animation      Motion (formerly Framer Motion)
 Icons          Lucide React
 Confetti FX    canvas-confetti
-Privacy Layer  Web Crypto API / btoa · atob
+Privacy Layer  WebRTC DataChannel + mpz wasm + Chou-Orlandi/KOS OT
 Build Tool     Vite
-Package Mgr    pnpm
+Package Mgr    npm
 ```
 
 ### How the Invite Link Works
 
-The challenger's value is base64-encoded and appended to the URL hash:
+Invite links contain only a category id and a random room id:
 
 ```
-https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwidiI6NTB9
+https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwiciI6InJvb20taWQifQ
                                 └─────────────────────────┘
-                                  base64({ c: "salary", v: 50 })
+                                  base64({ c: "salary", r: "room-id" })
 ```
 
 **Why this is private:**
-- URL hashes are **never sent to any server** (browser spec)
-- The comparison runs entirely in the recipient's browser
+- The link does **not** contain either player's value
+- A lightweight signaling server relays WebRTC offer / answer / ICE messages
+- Browsers then compare over a WebRTC DataChannel using the mpz wasm protocol engine
 - The result screen shows only Win / Lose / Draw — no raw values on either side
 
 ---
@@ -113,10 +114,19 @@ https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwidiI6NTB9
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
-# Start the dev server
-pnpm dev
+# Start the app and signaling server
+npm run dev:all
+
+# Run tests
+npm test
+
+# Build wasm + frontend
+npm run build
+
+# Smoke-test the invite flow in two browser pages
+npm run smoke:webrtc
 ```
 
 ---
@@ -136,6 +146,14 @@ src/
         ├── BattleResult.tsx      # Battle outcome (privacy-safe)
         ├── InviteChallenge.tsx   # Generate & share challenge link
         └── InviteAccept.tsx      # Accept a challenge from a link
+server/
+└── signaling.mjs                 # WebRTC signaling relay
+wasm/
+└── mpz-compare/                  # SecureCompare-owned mpz wasm adapter
+src/app/protocol/
+├── webrtcChallenge.ts            # Invite room + WebRTC handshake
+├── mpzProtocolEngine.ts          # DataChannel byte pump into wasm
+└── challengeToken.ts             # Category + room token
 ```
 
 ---
@@ -148,7 +166,7 @@ src/
 
 **Zero friction** — no sign-up, no account, no tracking. Open the app and play.
 
-**Local-first** — the app works without a backend. All logic runs in the browser. There's nothing to breach.
+**Local-first comparison** — private values stay in the browsers. The only server-side piece in invite mode is the signaling relay needed to establish the peer-to-peer DataChannel.
 
 ---
 
@@ -158,7 +176,8 @@ src/
 - [ ] Persistent challenge links with expiry tokens
 - [ ] Leaderboard based on win streaks (anonymised)
 - [ ] QR code generation for in-person PK battles
-- [ ] True zero-knowledge proof implementation
+- [ ] TURN relay for difficult NAT environments
+- [ ] Security review of mpz OT parameters and browser threat model
 
 ---
 
