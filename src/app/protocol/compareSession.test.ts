@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { comparePrivateValues, getCompareEngineInfo } from './compareSession';
+import { plaintextPrototypeEngine } from './compareEngine';
+import { comparePrivateValues } from './compareSession';
 
 describe('private compare session', () => {
   it('returns the comparison direction without revealing the peer value', async () => {
@@ -8,8 +9,8 @@ describe('private compare session', () => {
     await expect(comparePrivateValues({ mine: 3, peer: 9 })).resolves.toEqual('lose');
   });
 
-  it('marks the current browser engine as a development adapter until true two-party MPC is wired', () => {
-    expect(getCompareEngineInfo()).toMatchObject({
+  it('keeps the legacy plaintext prototype marked as a development adapter', () => {
+    expect(plaintextPrototypeEngine.info).toMatchObject({
       mpcReady: false,
       peerInputTransport: 'plaintext-datachannel',
     });

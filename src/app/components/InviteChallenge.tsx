@@ -6,7 +6,8 @@ import {
   createInviteChallenge,
   type InviteChallengeSession,
 } from '../protocol/webrtcChallenge';
-import { getCompareEngineInfo, type CompareOutcome } from '../protocol/compareSession';
+import type { CompareOutcome } from '../protocol/compareSession';
+import { mpzProtocolEngine } from '../protocol/mpzProtocolEngine';
 
 type Props = {
   category: Category;
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export function InviteChallenge({ category, value, onBack }: Props) {
-  const engineInfo = getCompareEngineInfo();
+  const engineInfo = mpzProtocolEngine.info;
   const [copied, setCopied] = useState(false);
   const [link, setLink] = useState('');
   const [status, setStatus] = useState('正在创建 WebRTC 房间...');

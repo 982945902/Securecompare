@@ -1,5 +1,6 @@
 import { decodeChallengeToken, encodeChallengeToken } from './challengeToken';
-import { comparePrivateValues, type CompareOutcome } from './compareSession';
+import type { CompareOutcome } from './compareSession';
+import { mpzProtocolEngine } from './mpzProtocolEngine';
 import { WebRtcByteTransport, type ByteTransport } from './webrtcTransport';
 
 type SignalKind = 'offer' | 'answer' | 'ice';
@@ -59,7 +60,7 @@ export async function createInviteChallenge(
     }
   });
 
-  const resultPromise = runCompareOverChannel(channel, myValue);
+  const resultPromise = runCompareOverChannel(channel, myValue, 'challenger');
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   signaling.sendSignal({ kind: 'offer', data: pc.localDescription!.toJSON() });
@@ -110,7 +111,7 @@ export async function acceptInviteChallenge(
   signaling.sendSignal({ kind: 'answer', data: pc.localDescription!.toJSON() });
 
   const channel = await channelPromise;
-  const result = await runCompareOverChannel(channel, myValue);
+  const result = await runCompareOverChannel(channel, myValue, 'accepter');
 
   return {
     categoryId: challenge.categoryId,
@@ -123,33 +124,19 @@ export async function acceptInviteChallenge(
   };
 }
 
-function runCompareOverChannel(channel: RTCDataChannel, myValue: number): Promise<CompareOutcome> {
+function runCompareOverChannel(
+  channel: RTCDataChannel,
+  myValue: number,
+  role: 'challenger' | 'accepter',
+): Promise<CompareOutcome> {
   return withTimeout(new Promise((resolve, reject) => {
     const transport = new WebRtcByteTransport(channel);
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    let sent = false;
 
-    const sendInput = () => {
-      if (sent) return;
-      sent = true;
-      transport.send(encoder.encode(JSON.stringify({ type: 'input', value: myValue })));
-    };
-
-    waitForChannelOpen(channel, dataChannelTimeoutMs).then(sendInput).catch(reject);
-    transport.onMessage(async (bytes) => {
-      try {
-        const message = JSON.parse(decoder.decode(bytes)) as { type?: string; value?: unknown };
-        if (message.type !== 'input' || typeof message.value !== 'number') {
-          return;
-        }
-        const result = await comparePrivateValues({ mine: myValue, peer: message.value });
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }), dataChannelTimeoutMs, 'DataChannel 比较超时，请确认发起方页面仍然打开，且没有在同一个标签页里打开挑战链接');
+    waitForChannelOpen(channel, dataChannelTimeoutMs)
+      .then(() => mpzProtocolEngine.run({ myValue, role, transport }))
+      .then(resolve)
+      .catch(reject);
+  }), dataChannelTimeoutMs, 'mpz 协议比较超时，请确认发起方页面仍然打开，且没有在同一个标签页里打开挑战链接');
 }
 
 function connectSignaling(roomId: string): Promise<SignalingConnection> {

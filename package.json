@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build:wasm": "node scripts/build-mpz-wasm.mjs",
+    "build": "npm run build:wasm && vite build",
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev:signal\" \"npm run dev\"",
     "dev:signal": "node server/signaling.mjs",

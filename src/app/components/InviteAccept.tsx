@@ -5,7 +5,8 @@ import confetti from 'canvas-confetti';
 import { Category, categories } from '../App';
 import { decodeChallengeToken } from '../protocol/challengeToken';
 import { acceptInviteChallenge } from '../protocol/webrtcChallenge';
-import { getCompareEngineInfo, type CompareOutcome } from '../protocol/compareSession';
+import type { CompareOutcome } from '../protocol/compareSession';
+import { mpzProtocolEngine } from '../protocol/mpzProtocolEngine';
 
 type Props = {
   token: string;
@@ -13,7 +14,7 @@ type Props = {
 };
 
 export function InviteAccept({ token, onClearChallenge }: Props) {
-  const engineInfo = getCompareEngineInfo();
+  const engineInfo = mpzProtocolEngine.info;
   const [inputValue, setInputValue] = useState('');
   const [result, setResult] = useState<CompareOutcome | null>(null);
   const [myValue, setMyValue] = useState<number | null>(null);
@@ -200,7 +201,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6 text-center text-sm text-gray-500">
-                    当前结果来自 WebRTC 原型通道；真正双端 MPC 引擎接入后，页面会只交换协议消息。
+                    当前结果来自 mpz wasm 双端消息泵；DataChannel 只承载协议字节，不直接发送双方输入。
                   </div>
 
                   <button

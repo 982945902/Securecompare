@@ -20,18 +20,6 @@ type MpzWasmModule = {
 
 let mpzModulePromise: Promise<MpzWasmModule | null> | null = null;
 
-const compareEngineInfo: CompareEngineInfo = {
-  id: 'mpz-in-memory-dev-adapter',
-  label: 'WebRTC 原型通道',
-  mpcReady: false,
-  peerInputTransport: 'plaintext-datachannel',
-  notice: '当前版本已接入 WebRTC DataChannel，但比较输入仍用于开发验证；真正双端 MPC 引擎接入前，不应视为生产级隐私比较。',
-};
-
-export function getCompareEngineInfo(): CompareEngineInfo {
-  return compareEngineInfo;
-}
-
 export async function comparePrivateValues(input: CompareInput): Promise<CompareOutcome> {
   const mine = encodeDecimalForCircuit(input.mine);
   const peer = encodeDecimalForCircuit(input.peer);
@@ -45,7 +33,7 @@ export async function comparePrivateValues(input: CompareInput): Promise<Compare
   return 'draw';
 }
 
-function encodeDecimalForCircuit(value: number): number {
+export function encodeDecimalForCircuit(value: number): number {
   if (!Number.isFinite(value) || value < 0) {
     throw new Error('Only non-negative finite values can be compared');
   }
@@ -64,7 +52,7 @@ async function loadMpzWasm(): Promise<MpzWasmModule | null> {
   }
 
   if (!mpzModulePromise) {
-    mpzModulePromise = import('./mpz-wasm/mpz_wasm_bench.js')
+    mpzModulePromise = import('./mpz-wasm/securecompare_mpz_wasm.js')
       .then(async (module) => {
         const mpz = module as MpzWasmModule;
         await mpz.default();
