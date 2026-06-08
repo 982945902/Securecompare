@@ -1,38 +1,29 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Frown, Equal, RefreshCw } from 'lucide-react';
+import { Trophy, Frown, Equal, RefreshCw, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Category, categories } from '../App';
-
-type ChallengePayload = {
-  c: string;
-  v: number;
-};
+import { decodeChallengeToken } from '../protocol/challengeToken';
+import { acceptInviteChallenge } from '../protocol/webrtcChallenge';
+import { getCompareEngineInfo, type CompareOutcome } from '../protocol/compareSession';
 
 type Props = {
   token: string;
   onClearChallenge: () => void;
 };
 
-function decodeChallenge(token: string): ChallengePayload | null {
-  try {
-    const json = atob(token);
-    return JSON.parse(json) as ChallengePayload;
-  } catch {
-    return null;
-  }
-}
-
 export function InviteAccept({ token, onClearChallenge }: Props) {
+  const engineInfo = getCompareEngineInfo();
   const [inputValue, setInputValue] = useState('');
-  const [result, setResult] = useState<'win' | 'lose' | 'draw' | null>(null);
+  const [result, setResult] = useState<CompareOutcome | null>(null);
   const [myValue, setMyValue] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
 
-  const payload = decodeChallenge(token);
-  const category: Category | undefined = categories.find((c) => c.id === payload?.c);
+  const challenge = decodeChallengeToken(token);
+  const category: Category | undefined = categories.find((c) => c.id === challenge?.categoryId);
 
-  if (!payload || !category) {
+  if (!challenge || !category) {
     return (
       <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-xl mx-auto text-center">
         <div className="text-5xl mb-4">❌</div>
@@ -48,7 +39,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(inputValue);
     if (isNaN(val) || val < category.min || val > category.max) {
@@ -57,19 +48,22 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
     }
     setError('');
     setMyValue(val);
+    setIsConnecting(true);
 
-    const opponentValue = payload.v;
-    let r: 'win' | 'lose' | 'draw';
-    if (val > opponentValue) r = 'win';
-    else if (val < opponentValue) r = 'lose';
-    else r = 'draw';
+    try {
+      const session = await acceptInviteChallenge(token, val);
+      setResult(session.result);
+      session.close();
 
-    setResult(r);
-
-    if (r === 'win') {
-      setTimeout(() => {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      }, 400);
+      if (session.result === 'win') {
+        setTimeout(() => {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }, 400);
+      }
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'WebRTC 连接失败');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -128,7 +122,11 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
             </div>
 
             <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mb-6 text-sm text-purple-700 text-center">
-              🔒 挑战者数值已加密，接受挑战后只显示胜负，不泄露任何具体数值
+              协议状态：{engineInfo.label}。{engineInfo.notice}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6 text-sm text-amber-700 text-center">
+              请确认发起方页面仍然保持打开；如果你在同一个标签页打开链接，连接会失效。
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -144,13 +142,16 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
                 max={category.max}
                 step={category.id === 'salary' ? 0.1 : 1}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg mb-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                disabled={isConnecting}
               />
               {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
               <button
                 type="submit"
-                className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+                disabled={isConnecting}
+                className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                接受挑战 ⚔️
+                {isConnecting && <Loader2 size={18} className="animate-spin" />}
+                {isConnecting ? '正在建立 WebRTC 连接...' : '接受挑战 ⚔️'}
               </button>
             </form>
           </motion.div>
@@ -199,7 +200,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6 text-center text-sm text-gray-500">
-                    🔒 隐私保护：双方具体数值均已加密，不会泄露给任何人
+                    当前结果来自 WebRTC 原型通道；真正双端 MPC 引擎接入后，页面会只交换协议消息。
                   </div>
 
                   <button
