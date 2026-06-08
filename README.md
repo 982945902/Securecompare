@@ -2,6 +2,10 @@
 
 <div align="center">
 
+<img src="./icon.svg" width="120" height="120" alt="Anonymous Comparator Icon" />
+
+<br /><br />
+
 **A privacy-first anonymous comparison platform powered by client-side encryption**
 
 *Your data. Your secret. Always.*

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="tile-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3B0764" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+    <linearGradient id="shield-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05" />
+    </linearGradient>
+    <clipPath id="shield-clip">
+      <path d="M256 108 L352 148 L352 268 Q352 330 256 368 Q160 330 160 268 L160 148 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Tile background -->
+  <rect width="512" height="512" rx="112" fill="url(#tile-bg)" />
+  <rect width="512" height="512" rx="112" fill="none" stroke="white" stroke-opacity="0.07" stroke-width="2" />
+
+  <!-- Shield body -->
+  <path d="M256 108 L356 150 L356 272 Q356 338 256 378 Q156 338 156 272 L156 150 Z"
+    fill="url(#shield-fill)" stroke="white" stroke-opacity="0.9" stroke-width="10" stroke-linejoin="round" />
+
+  <!-- Dividing line -->
+  <line x1="256" y1="158" x2="256" y2="360"
+    stroke="white" stroke-opacity="0.5" stroke-width="3" stroke-dasharray="6 5"
+    clip-path="url(#shield-clip)" />
+
+  <!-- Left figure: head -->
+  <circle cx="210" cy="210" r="26" fill="white" fill-opacity="0.92" clip-path="url(#shield-clip)" />
+  <!-- Left figure: body -->
+  <path d="M184 248 Q184 238 210 238 Q236 238 236 248 L236 300 Q236 308 228 308 L192 308 Q184 308 184 300 Z"
+    fill="white" fill-opacity="0.92" clip-path="url(#shield-clip)" />
+  <!-- Left figure: mask bar -->
+  <rect x="187" y="207" width="46" height="14" rx="7"
+    fill="#6D28D9" fill-opacity="0.85" clip-path="url(#shield-clip)" />
+
+  <!-- Right figure: head -->
+  <circle cx="302" cy="210" r="26" fill="white" fill-opacity="0.92" clip-path="url(#shield-clip)" />
+  <!-- Right figure: body -->
+  <path d="M276 248 Q276 238 302 238 Q328 238 328 248 L328 300 Q328 308 320 308 L284 308 Q276 308 276 300 Z"
+    fill="white" fill-opacity="0.92" clip-path="url(#shield-clip)" />
+  <!-- Right figure: mask bar -->
+  <rect x="279" y="207" width="46" height="14" rx="7"
+    fill="#6D28D9" fill-opacity="0.85" clip-path="url(#shield-clip)" />
+
+  <!-- VS badge -->
+  <circle cx="256" cy="300" r="22" fill="#7C3AED" clip-path="url(#shield-clip)" />
+  <circle cx="256" cy="300" r="22" fill="none" stroke="white" stroke-opacity="0.9" stroke-width="2.5" clip-path="url(#shield-clip)" />
+  <text x="256" y="306" text-anchor="middle" fill="white" font-size="15" font-weight="800"
+    font-family="system-ui, -apple-system, sans-serif" letter-spacing="-0.5" clip-path="url(#shield-clip)">VS</text>
+
+  <!-- Lock shackle -->
+  <path d="M238 120 A18 18 0 0 1 274 120"
+    fill="none" stroke="white" stroke-opacity="0.85" stroke-width="10" stroke-linecap="round" />
+
+  <!-- Lock body -->
+  <rect x="228" y="117" width="56" height="38" rx="9"
+    fill="#4C1D95" stroke="white" stroke-opacity="0.85" stroke-width="5" />
+  <!-- Keyhole -->
+  <circle cx="256" cy="131" r="6" fill="white" fill-opacity="0.9" />
+  <rect x="252" y="131" width="8" height="10" rx="2" fill="white" fill-opacity="0.9" />
+</svg>
