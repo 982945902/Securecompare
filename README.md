@@ -1,10 +1,10 @@
-# 🔐 匿名比较器
+# 🔐 Anonymous Comparator
 
 <div align="center">
 
-**基于加密技术的隐私匿名比较平台**
+**A privacy-first anonymous comparison platform powered by client-side encryption**
 
-*你的数据，永不泄露。*
+*Your data. Your secret. Always.*
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
@@ -15,138 +15,153 @@
 
 ---
 
-## ✨ 这是什么？
+## ✨ What is this?
 
-**匿名比较器**是一个让你在完全保护隐私的前提下，与他人比较敏感数据的趣味平台。
+**Anonymous Comparator** is a fun, privacy-respecting platform that lets you compare sensitive personal data with others — without ever revealing the actual numbers.
 
-你只会知道你赢了、输了还是平局——对方的具体数值，永远不会被任何人看到。
-
----
-
-## 🎮 三种玩法
-
-### 👤 单人模式
-输入你的数据，与全球匿名数据库进行统计比较，查看你处于哪个**百分位**。
-
-```
-你的年薪 → 比 78% 的人高
-你的身高 → 比 62% 的人高
-```
-
-### ⚔️ 随机对战
-实时匹配一名在线玩家，双方数据加密比较，结果**只显示胜负**，不泄露任何具体数值。
-
-### 🔗 邀请 PK *(新功能)*
-生成一条专属挑战链接，发给你想挑战的好友。对方点击链接，输入自己的数据，即可一决高下。
-
-```
-你  →  生成链接  →  发给好友
-好友 →  点击链接  →  输入数值  →  看到胜负
-         ↑
-   你的数值永远不会显示给对方
-```
+You'll only ever learn whether you **won**, **lost**, or **tied**. The other person's exact value? Hidden. Forever.
 
 ---
 
-## 🔒 隐私原则
+## 🎮 Three Ways to Play
 
-这是这个项目最重要的设计底线：
+### 👤 Solo Mode
+Enter your value and compare yourself against a global anonymous database. See exactly which **percentile** you fall into.
 
-| 场景 | 你能看到什么 |
-|------|-------------|
-| 单人模式结果 | ✅ 你的百分位排名 |
-| 对战结果 | ✅ 胜 / 负 / 平 |
-| 对手的具体数值 | ❌ 永远不显示 |
-| 差距数字 | ❌ 永远不显示 |
-| 你的原始数据上传到服务器 | ❌ 从不发生 |
+```
+Your salary  →  Higher than 78% of people
+Your height  →  Higher than 62% of people
+```
 
-> **所有计算在你的浏览器本地完成**，数据不会离开你的设备。
+### ⚔️ Random Battle
+Get matched with a live anonymous player. Your values are compared in encrypted form — only the **outcome** is revealed. No numbers, no leaks.
+
+### 🔗 Invite PK *(New)*
+Generate a personal challenge link and send it to whoever you want to challenge. They click, enter their value, and get the result — without ever seeing yours.
+
+```
+You  →  Generate link  →  Send to friend
+Friend  →  Click link  →  Enter value  →  See result (Win / Lose / Draw)
+                ↑
+     Your exact value is never shown to them
+```
 
 ---
 
-## 📊 比较类别
+## 🔒 Privacy Principles
 
-| 类别 | 图标 | 范围 |
-|------|------|------|
-| 年薪 | 💰 | 0 – 1000 万元 |
-| 身高 | 📏 | 140 – 220 cm |
-| 年龄 | 🎂 | 18 – 100 岁 |
-| 长度 | 🍆 | 你懂的 |
+These are non-negotiable design rules — not features, but foundations:
+
+| What you want to know | What you actually see |
+|-----------------------|----------------------|
+| Your own percentile rank | ✅ Shown in Solo Mode |
+| Battle outcome | ✅ Win / Lose / Draw |
+| Opponent's exact value | ❌ Never shown |
+| The gap between values | ❌ Never shown |
+| Your raw data sent to a server | ❌ Never happens |
+
+> **All computation happens locally in your browser.** Your data never leaves your device.
 
 ---
 
-## 🛠️ 技术栈
+## 📊 Comparison Categories
+
+| Category | Icon | Range |
+|----------|------|-------|
+| Annual Salary | 💰 | 0 – 1,000 万 |
+| Height | 📏 | 140 – 220 cm |
+| Age | 🎂 | 18 – 100 yrs |
+| Length | 🍆 | You know which one |
+
+---
+
+## 🛠️ Tech Stack
 
 ```
-前端框架     React 18 + TypeScript
-样式         Tailwind CSS v4
-动画         Motion (Framer Motion)
-图标         Lucide React
-特效         canvas-confetti
-加密编码     Web Crypto API / btoa·atob
-构建工具     Vite
+Framework      React 18 + TypeScript
+Styling        Tailwind CSS v4
+Animation      Motion (formerly Framer Motion)
+Icons          Lucide React
+Confetti FX    canvas-confetti
+Privacy Layer  Web Crypto API / btoa · atob
+Build Tool     Vite
+Package Mgr    pnpm
 ```
 
-### 邀请链接的隐私实现
+### How the Invite Link Works
 
-挑战者的数值通过 `btoa` 编码后附加在 URL Hash 中：
+The challenger's value is base64-encoded and appended to the URL hash:
 
 ```
 https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwidiI6NTB9
                                 └─────────────────────────┘
-                                   base64({ c: "salary", v: 50 })
+                                  base64({ c: "salary", v: 50 })
 ```
 
-- Hash 不会被发送到服务器（浏览器行为）
-- 对方接受挑战后，比较在本地完成
-- 结果页只显示胜负，双方均无法看到对方数值
+**Why this is private:**
+- URL hashes are **never sent to any server** (browser spec)
+- The comparison runs entirely in the recipient's browser
+- The result screen shows only Win / Lose / Draw — no raw values on either side
 
 ---
 
-## 🚀 快速开始
+## 🚀 Getting Started
 
 ```bash
-# 安装依赖
+# Install dependencies
 pnpm install
 
-# 启动开发服务器
+# Start the dev server
 pnpm dev
 ```
 
 ---
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 src/
 └── app/
-    ├── App.tsx                  # 主应用，路由与状态管理
+    ├── App.tsx                   # Root component — state & routing
     └── components/
-        ├── ModeSelector.tsx     # 模式选择（单人 / 对战 / 邀请）
-        ├── CompareCategories.tsx # 类别选择
-        ├── CompareForm.tsx      # 数值输入表单
-        ├── CompareResult.tsx    # 单人模式结果
-        ├── BattleMatching.tsx   # 对战匹配动画
-        ├── BattleResult.tsx     # 对战结果（隐私保护版）
-        ├── InviteChallenge.tsx  # 邀请链接生成
-        └── InviteAccept.tsx     # 接受挑战界面
+        ├── ModeSelector.tsx      # Pick a mode: Solo / Battle / Invite
+        ├── CompareCategories.tsx # Choose a comparison category
+        ├── CompareForm.tsx       # Value input form
+        ├── CompareResult.tsx     # Solo mode percentile result
+        ├── BattleMatching.tsx    # Animated matchmaking screen
+        ├── BattleResult.tsx      # Battle outcome (privacy-safe)
+        ├── InviteChallenge.tsx   # Generate & share challenge link
+        └── InviteAccept.tsx      # Accept a challenge from a link
 ```
 
 ---
 
-## 🎨 设计理念
+## 🎨 Design Philosophy
 
-- **趣味性优先** — 加密、隐私这些技术话题，用游戏化的方式呈现
-- **隐私是底线** — 任何情况下都不展示对方的具体数值，这不是功能，是原则
-- **流畅的动画** — 胜利有撒花特效，结果有弹入动画，让每次比较都有仪式感
-- **无需注册** — 打开即用，没有账号，没有追踪
+**Fun comes first** — encryption and privacy are serious topics, but they don't have to feel serious. Everything here is game-ified: matchmaking animations, confetti on wins, dramatic reveal sequences.
+
+**Privacy is the floor, not a feature** — in no scenario does any interface element expose an opponent's exact value. This isn't a toggle; it's hardcoded into every result screen.
+
+**Zero friction** — no sign-up, no account, no tracking. Open the app and play.
+
+**Local-first** — the app works without a backend. All logic runs in the browser. There's nothing to breach.
+
+---
+
+## 🗺️ Roadmap Ideas
+
+- [ ] More categories (net worth, bench press, sleep hours...)
+- [ ] Persistent challenge links with expiry tokens
+- [ ] Leaderboard based on win streaks (anonymised)
+- [ ] QR code generation for in-person PK battles
+- [ ] True zero-knowledge proof implementation
 
 ---
 
 <div align="center">
 
-**🔐 你的数据，只属于你**
+**🔐 Your data belongs to you — and only you.**
 
-*Made with ❤️ and a healthy respect for privacy*
+*Built with React, TypeScript, and a deep respect for privacy.*
 
 </div>
