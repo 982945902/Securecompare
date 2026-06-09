@@ -5,6 +5,7 @@ pub mod error;
 pub mod hash;
 pub mod keygen;
 pub mod params;
+pub mod rng;
 pub mod setup;
 pub mod token;
 pub mod types;
