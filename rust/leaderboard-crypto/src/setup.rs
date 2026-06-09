@@ -18,5 +18,7 @@ pub fn comparison_material(
     _public: &PublicParams,
     _master: &MasterSecret,
 ) -> Result<CompareMaterial, OreError> {
-    Err(OreError::AlgorithmNotImplemented("m-ORE comparison material"))
+    Err(OreError::AlgorithmNotImplemented(
+        "m-ORE comparison material",
+    ))
 }

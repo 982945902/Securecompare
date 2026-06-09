@@ -15,9 +15,14 @@ serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 
 [dev-dependencies]
+criterion = "0.5"
 rand_chacha = "0.3"
 
 [features]
 default = []
 
 [workspace]
+
+[[bench]]
+name = "ore_bench"
+harness = false

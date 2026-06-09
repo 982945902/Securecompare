@@ -29,7 +29,9 @@ impl SecurityParams {
             return Err(OreError::InvalidParams("value_bits must be at most 63"));
         }
         if self.max_clients == 0 {
-            return Err(OreError::InvalidParams("max_clients must be greater than 0"));
+            return Err(OreError::InvalidParams(
+                "max_clients must be greater than 0",
+            ));
         }
         Ok(())
     }

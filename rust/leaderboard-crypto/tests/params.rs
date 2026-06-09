@@ -11,13 +11,19 @@ fn accepts_valid_params() {
 #[test]
 fn rejects_zero_value_bits() {
     let err = SecurityParams::new(0, 100).unwrap_err();
-    assert_eq!(err, OreError::InvalidParams("value_bits must be at least 1"));
+    assert_eq!(
+        err,
+        OreError::InvalidParams("value_bits must be at least 1")
+    );
 }
 
 #[test]
 fn rejects_too_many_value_bits_for_u64_domain() {
     let err = SecurityParams::new(64, 100).unwrap_err();
-    assert_eq!(err, OreError::InvalidParams("value_bits must be at most 63"));
+    assert_eq!(
+        err,
+        OreError::InvalidParams("value_bits must be at most 63")
+    );
 }
 
 #[test]
