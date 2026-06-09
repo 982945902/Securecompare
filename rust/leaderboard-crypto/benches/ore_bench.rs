@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng};
 use securecompare_leaderboard_crypto::{dpph, m_h_ore, m_ore, sd_ore, SecurityParams};
 
@@ -8,7 +8,7 @@ fn rng(seed: u8) -> ChaCha20Rng {
 
 fn parameter_validation(c: &mut Criterion) {
     c.bench_function("security_params_new", |b| {
-        b.iter(|| SecurityParams::new(32, 10_000).unwrap())
+        b.iter(|| black_box(SecurityParams::new(black_box(32), black_box(10_000)).unwrap()))
     });
 }
 
@@ -19,7 +19,7 @@ fn sd_ore_compare(c: &mut Criterion) {
     let right = key.enc_right(51, &mut rng).unwrap();
 
     c.bench_function("sd_ore_compare_domain_64", |b| {
-        b.iter(|| sd_ore::cmp(&left, &right).unwrap())
+        b.iter(|| sd_ore::cmp(black_box(&left), black_box(&right)).unwrap())
     });
 }
 
@@ -30,7 +30,7 @@ fn dpph_test(c: &mut Criterion) {
     let right = dpph::hash(&hash_key, 43);
 
     c.bench_function("dpph_test_neighbor", |b| {
-        b.iter(|| dpph::test(&test_key, &left, &right))
+        b.iter(|| dpph::test(black_box(&test_key), black_box(&left), black_box(&right)))
     });
 }
 
@@ -42,7 +42,7 @@ fn more_compare(c: &mut Criterion) {
     let token = m_ore::token(params, &query, 169, &mut rng).unwrap();
 
     c.bench_function("m_ore_compare_8_bits", |b| {
-        b.iter(|| m_ore::compare(&ciphertext, &token).unwrap())
+        b.iter(|| m_ore::compare(black_box(&ciphertext), black_box(&token)).unwrap())
     });
 }
 
@@ -56,10 +56,22 @@ fn mhore_compare(c: &mut Criterion) {
     let same_length_token = m_h_ore::token(params, &query, 169, &mut rng).unwrap();
 
     c.bench_function("m_h_ore_compare_different_bit_length", |b| {
-        b.iter(|| m_h_ore::compare(&different_length_ciphertext, &different_length_token).unwrap())
+        b.iter(|| {
+            m_h_ore::compare(
+                black_box(&different_length_ciphertext),
+                black_box(&different_length_token),
+            )
+            .unwrap()
+        })
     });
     c.bench_function("m_h_ore_compare_same_bit_length", |b| {
-        b.iter(|| m_h_ore::compare(&same_length_ciphertext, &same_length_token).unwrap())
+        b.iter(|| {
+            m_h_ore::compare(
+                black_box(&same_length_ciphertext),
+                black_box(&same_length_token),
+            )
+            .unwrap()
+        })
     });
 }
 

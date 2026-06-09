@@ -111,16 +111,30 @@ pub fn compare(ciphertext: &MoreCiphertext, token: &MoreToken) -> Result<Orderin
         return Err(OreError::ParameterMismatch);
     }
 
-    for c_i in &ciphertext.components {
-        let left_pairing = Bls12_381::pairing(c_i.into_affine(), token.t0.into_affine());
-        for (t_j_1, t_j_2) in &token.components {
-            let right_greater =
-                Bls12_381::pairing(ciphertext.c0.into_affine(), t_j_1.into_affine());
+    let t0 = token.t0.into_affine();
+    let c0 = ciphertext.c0.into_affine();
+    let ciphertext_pairings: Vec<_> = ciphertext
+        .components
+        .iter()
+        .map(|c_i| Bls12_381::pairing(c_i.into_affine(), t0))
+        .collect();
+    let token_pairings: Vec<_> = token
+        .components
+        .iter()
+        .map(|(t_j_1, t_j_2)| {
+            (
+                Bls12_381::pairing(c0, t_j_1.into_affine()),
+                Bls12_381::pairing(c0, t_j_2.into_affine()),
+            )
+        })
+        .collect();
+
+    for left_pairing in &ciphertext_pairings {
+        for (right_greater, right_less) in &token_pairings {
             if left_pairing == right_greater {
                 return Ok(Ordering::Greater);
             }
 
-            let right_less = Bls12_381::pairing(ciphertext.c0.into_affine(), t_j_2.into_affine());
             if left_pairing == right_less {
                 return Ok(Ordering::Less);
             }
