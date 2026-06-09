@@ -9,22 +9,22 @@ pub struct DpphPublicParams;
 
 #[derive(Debug, Clone)]
 pub struct DpphHashKey {
-    k1: [u8; 32],
-    k2_1: Fr,
-    k2_2: Fr,
+    pub(crate) k1: [u8; 32],
+    pub(crate) k2_1: Fr,
+    pub(crate) k2_2: Fr,
 }
 
 #[derive(Debug, Clone)]
 pub struct DpphTestKey {
-    g1_k2_1: G1Projective,
-    g2_k2_2: G2Projective,
+    pub(crate) g1_k2_1: G1Projective,
+    pub(crate) g2_k2_2: G2Projective,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DpphHash {
-    h1: G1Projective,
-    h2: G2Projective,
-    h3: G2Projective,
+    pub(crate) h1: G1Projective,
+    pub(crate) h2: G2Projective,
+    pub(crate) h3: G2Projective,
 }
 
 pub fn kgen<R: CryptoRng + RngCore>(rng: &mut R) -> (DpphPublicParams, DpphHashKey, DpphTestKey) {
@@ -63,13 +63,13 @@ pub fn test(test_key: &DpphTestKey, left: &DpphHash, right: &DpphHash) -> bool {
     left_pairing == right_plus || left_pairing == right_minus
 }
 
-fn scalar_from_rng<R: CryptoRng + RngCore>(rng: &mut R) -> Fr {
+pub(crate) fn scalar_from_rng<R: CryptoRng + RngCore>(rng: &mut R) -> Fr {
     let mut bytes = [0u8; 64];
     rng.fill_bytes(&mut bytes);
     Fr::from_be_bytes_mod_order(&bytes)
 }
 
-fn prf_to_scalar(k1: &[u8; 32], value: i128) -> Fr {
+pub(crate) fn prf_to_scalar(k1: &[u8; 32], value: i128) -> Fr {
     let mut hasher = Sha256::new();
     hasher.update(b"securecompare.dpph.H.v1");
     hasher.update(k1);

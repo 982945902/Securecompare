@@ -5,6 +5,7 @@ pub mod encrypt;
 pub mod error;
 pub mod hash;
 pub mod keygen;
+pub mod m_ore;
 pub mod params;
 pub mod rng;
 pub mod sd_ore;
