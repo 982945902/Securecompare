@@ -67,7 +67,59 @@ These are non-negotiable design rules — not features, but foundations:
 | The gap between values | ❌ Never shown |
 | Your raw data sent to a server | ❌ Never happens |
 
-> **All computation happens locally in your browser.** Your data never leaves your device.
+> **Private comparison happens in the browsers.** The signaling server is only used for peer discovery and WebRTC negotiation; it does not receive either player's raw value.
+
+---
+
+## Security Model
+
+This section describes the security model for **Invite PK**, the privacy-computing mode this project is converging on. The goal is not to hide the final result; it is to hide the two raw inputs while revealing only `Win / Lose / Draw`.
+
+### 1. Threat Model
+
+The protocol protects each player's private input from the other player and from the signaling server. The server can observe connection metadata such as room creation and signaling timing, but it is not part of the comparison computation.
+
+The expected leakage is intentionally small:
+
+| Data | Visibility |
+|------|------------|
+| Challenger raw value | Hidden from accepter and server |
+| Accepter raw value | Hidden from challenger and server |
+| Final comparison result | Revealed to both players |
+| WebRTC metadata | Visible to the browser/network stack |
+| Signaling messages | Offer / answer / ICE only |
+
+![Security boundary diagram](./docs/diagrams/security-boundary.svg)
+
+### 2. Invite PK Protocol
+
+Invite PK is split into two planes. The signaling plane only helps the browsers establish a peer-to-peer channel. The comparison plane runs between the two browsers over a WebRTC DataChannel.
+
+![Invite PK protocol diagram](./docs/diagrams/invite-pk-protocol.svg)
+
+In the intended protocol, the challenge token contains a category id and a random room id. It does **not** contain either player's raw value. Once both pages are open, the two browser clients exchange MPC protocol messages directly.
+
+### 3. MPC Compare Pipeline
+
+The comparison engine encodes both values into a small integer domain and evaluates a comparison circuit. The circuit is executed as a two-party garbled-circuit protocol: one browser acts as the garbler, the other as the evaluator.
+
+The OT stack is designed as:
+
+```text
+Chou-Orlandi base OT
+        ↓
+KOS correlated random OT extension
+        ↓
+DerandCOT
+        ↓
+mpz garbled comparison circuit
+        ↓
+Win / Lose / Draw
+```
+
+![MPC compare pipeline diagram](./docs/diagrams/mpc-compare-pipeline.svg)
+
+The important design property is that WebRTC carries protocol messages, not JSON payloads containing the original values.
 
 ---
 
@@ -90,24 +142,25 @@ Styling        Tailwind CSS v4
 Animation      Motion (formerly Framer Motion)
 Icons          Lucide React
 Confetti FX    canvas-confetti
-Privacy Layer  Web Crypto API / btoa · atob
+Privacy Layer  WebRTC DataChannel + mpz wasm + OT
 Build Tool     Vite
 Package Mgr    pnpm
 ```
 
 ### How the Invite Link Works
 
-The challenger's value is base64-encoded and appended to the URL hash:
+The invite link carries only routing metadata:
 
 ```
-https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwidiI6NTB9
+https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwiciI6InJvb20taWQifQ
                                 └─────────────────────────┘
-                                  base64({ c: "salary", v: 50 })
+                                  base64({ c: "salary", r: "room-id" })
 ```
 
 **Why this is private:**
-- URL hashes are **never sent to any server** (browser spec)
-- The comparison runs entirely in the recipient's browser
+- The invite token does **not** contain either player's value
+- The signaling service relays only WebRTC negotiation messages
+- The comparison runs over a browser-to-browser DataChannel
 - The result screen shows only Win / Lose / Draw — no raw values on either side
 
 ---
