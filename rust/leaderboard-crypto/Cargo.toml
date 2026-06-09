@@ -1,0 +1,23 @@
+[package]
+name = "securecompare-leaderboard-crypto"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "UNLICENSED"
+
+[lib]
+name = "securecompare_leaderboard_crypto"
+path = "src/lib.rs"
+
+[dependencies]
+rand_core = "0.6"
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+
+[dev-dependencies]
+rand_chacha = "0.3"
+
+[features]
+default = []
+
+[workspace]

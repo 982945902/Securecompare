@@ -1,3 +1,4 @@
 dist/
 node_modules/
 wasm/mpz-compare/target/
+rust/leaderboard-crypto/target/
