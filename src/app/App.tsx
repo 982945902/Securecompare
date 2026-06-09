@@ -1,155 +1,254 @@
+import { useState, useEffect } from 'react';
+import { CompareCategories } from './components/CompareCategories';
+import { CompareForm } from './components/CompareForm';
+import { CompareResult } from './components/CompareResult';
+import { ModeSelector } from './components/ModeSelector';
+import { BattleMatching } from './components/BattleMatching';
+import { BattleResult } from './components/BattleResult';
+import { InviteChallenge } from './components/InviteChallenge';
+import { InviteAccept } from './components/InviteAccept';
+
+export type Category = {
+  id: string;
+  title: string;
+  icon: string;
+  unit: string;
+  placeholder: string;
+  min: number;
+  max: number;
+};
+
+export const categories: Category[] = [
+  {
+    id: 'salary',
+    title: '年薪',
+    icon: '💰',
+    unit: '万元',
+    placeholder: '输入你的年薪（万元）',
+    min: 0,
+    max: 1000,
+  },
+  {
+    id: 'height',
+    title: '身高',
+    icon: '📏',
+    unit: 'cm',
+    placeholder: '输入你的身高（cm）',
+    min: 140,
+    max: 220,
+  },
+  {
+    id: 'age',
+    title: '年龄',
+    icon: '🎂',
+    unit: '岁',
+    placeholder: '输入你的年龄',
+    min: 18,
+    max: 100,
+  },
+  {
+    id: 'length',
+    title: '长度',
+    icon: '🍆',
+    unit: 'cm',
+    placeholder: '你懂的...',
+    min: 5,
+    max: 30,
+  },
+];
+
+export type Mode = 'solo' | 'battle' | 'invite';
+
+export type CompareState = {
+  mode: Mode | null;
+  category: Category | null;
+  value: number | null;
+  percentile: number | null;
+};
+
+export type BattleState = {
+  isMatching: boolean;
+  result: 'win' | 'lose' | 'draw' | null;
+};
+
+function readChallengeToken(): string | null {
+  const hash = window.location.hash;
+  const match = hash.match(/[#&]challenge=([^&]+)/);
+  return match ? match[1] : null;
+}
+
 export default function App() {
+  const [challengeToken, setChallengeToken] = useState<string | null>(() => readChallengeToken());
+
+  const [state, setState] = useState<CompareState>({
+    mode: null,
+    category: null,
+    value: null,
+    percentile: null,
+  });
+
+  const [battleState, setBattleState] = useState<BattleState>({
+    isMatching: false,
+    result: null,
+  });
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const token = readChallengeToken();
+      setChallengeToken(token);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const handleSelectMode = (mode: Mode) => {
+    setState({ ...state, mode });
+  };
+
+  const handleSelectCategory = (category: Category) => {
+    setState({ ...state, category, value: null, percentile: null });
+  };
+
+  const handleCompare = (value: number) => {
+    if (state.mode === 'solo') {
+      const percentile = calculatePercentile(state.category!.id, value);
+      setState({ ...state, value, percentile });
+    } else if (state.mode === 'battle') {
+      setState({ ...state, value });
+      setBattleState({ isMatching: true, result: null });
+
+      setTimeout(() => {
+        const opponentValue = generateOpponentValue(state.category!, value);
+        const result = value > opponentValue ? 'win' : value < opponentValue ? 'lose' : 'draw';
+        setBattleState({ isMatching: false, result });
+      }, 3000);
+    } else if (state.mode === 'invite') {
+      // Invite mode: show link generation screen with entered value
+      setState({ ...state, value });
+    }
+  };
+
+  const handleReset = () => {
+    setState({ mode: null, category: null, value: null, percentile: null });
+    setBattleState({ isMatching: false, result: null });
+  };
+
+  const handleClearChallenge = () => {
+    window.location.hash = '';
+    setChallengeToken(null);
+    handleReset();
+  };
+
+  // If there's an incoming challenge token, show the accept screen
+  if (challengeToken) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center mb-12">
+            <h1 className="text-5xl mb-4">🔐 匿名比较器</h1>
+            <p className="text-gray-600">基于加密技术的隐私比较平台 · 你的数据永不泄露</p>
+          </header>
+          <InviteAccept token={challengeToken} onClearChallenge={handleClearChallenge} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={{ background: '#1a0533', minHeight: '100vh' }}
-      className="flex items-center justify-center"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 512 512"
-        width="320"
-        height="320"
-      >
-        <defs>
-          {/* Tile background gradient */}
-          <linearGradient id="tile-bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#3B0764" />
-            <stop offset="100%" stopColor="#6D28D9" />
-          </linearGradient>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <header className="text-center mb-12">
+          <h1 className="text-5xl mb-4">🔐 匿名比较器</h1>
+          <p className="text-gray-600">
+            基于加密技术的隐私比较平台 · 你的数据永不泄露
+          </p>
+        </header>
 
-          {/* Shield fill — subtle lighter purple */}
-          <linearGradient id="shield-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05" />
-          </linearGradient>
+        {!state.mode && (
+          <ModeSelector onSelectMode={handleSelectMode} />
+        )}
 
-          {/* Clip the two figures inside the shield */}
-          <clipPath id="shield-clip">
-            <path d="M256 108 L352 148 L352 268 Q352 330 256 368 Q160 330 160 268 L160 148 Z" />
-          </clipPath>
-        </defs>
+        {state.mode && !state.category && (
+          <CompareCategories
+            categories={categories}
+            onSelect={handleSelectCategory}
+            onBack={() => setState({ ...state, mode: null })}
+          />
+        )}
 
-        {/* ── Tile background ── */}
-        <rect width="512" height="512" rx="112" fill="url(#tile-bg)" />
+        {state.category && state.value === null && (
+          <CompareForm
+            category={state.category}
+            mode={state.mode!}
+            onCompare={handleCompare}
+            onBack={() => setState({ ...state, category: null })}
+          />
+        )}
 
-        {/* ── Subtle inner glow ring ── */}
-        <rect
-          width="512"
-          height="512"
-          rx="112"
-          fill="none"
-          stroke="white"
-          strokeOpacity="0.07"
-          strokeWidth="2"
-        />
+        {state.mode === 'solo' && state.percentile !== null && (
+          <CompareResult
+            category={state.category!}
+            value={state.value!}
+            percentile={state.percentile}
+            onReset={handleReset}
+          />
+        )}
 
-        {/* ── Shield body ── */}
-        <path
-          d="M256 108 L356 150 L356 272 Q356 338 256 378 Q156 338 156 272 L156 150 Z"
-          fill="url(#shield-fill)"
-          stroke="white"
-          strokeOpacity="0.9"
-          strokeWidth="10"
-          strokeLinejoin="round"
-        />
+        {state.mode === 'battle' && battleState.isMatching && (
+          <BattleMatching category={state.category!} />
+        )}
 
-        {/* ── Vertical dividing line inside shield ── */}
-        <line
-          x1="256" y1="158"
-          x2="256" y2="360"
-          stroke="white"
-          strokeOpacity="0.5"
-          strokeWidth="3"
-          strokeDasharray="6 5"
-          clipPath="url(#shield-clip)"
-        />
+        {state.mode === 'battle' && !battleState.isMatching && battleState.result && (
+          <BattleResult
+            category={state.category!}
+            myValue={state.value!}
+            result={battleState.result}
+            onReset={handleReset}
+          />
+        )}
 
-        {/* ══ LEFT FIGURE ══ */}
-        {/* Head */}
-        <circle cx="210" cy="210" r="26" fill="white" fillOpacity="0.92" clipPath="url(#shield-clip)" />
-        {/* Body */}
-        <path
-          d="M184 248 Q184 238 210 238 Q236 238 236 248 L236 300 Q236 308 228 308 L192 308 Q184 308 184 300 Z"
-          fill="white"
-          fillOpacity="0.92"
-          clipPath="url(#shield-clip)"
-        />
-        {/* Mask bar — anonymity symbol over face */}
-        <rect
-          x="187" y="207" width="46" height="14"
-          rx="7"
-          fill="#6D28D9"
-          fillOpacity="0.85"
-          clipPath="url(#shield-clip)"
-        />
-
-        {/* ══ RIGHT FIGURE ══ */}
-        {/* Head */}
-        <circle cx="302" cy="210" r="26" fill="white" fillOpacity="0.92" clipPath="url(#shield-clip)" />
-        {/* Body */}
-        <path
-          d="M276 248 Q276 238 302 238 Q328 238 328 248 L328 300 Q328 308 320 308 L284 308 Q276 308 276 300 Z"
-          fill="white"
-          fillOpacity="0.92"
-          clipPath="url(#shield-clip)"
-        />
-        {/* Mask bar */}
-        <rect
-          x="279" y="207" width="46" height="14"
-          rx="7"
-          fill="#6D28D9"
-          fillOpacity="0.85"
-          clipPath="url(#shield-clip)"
-        />
-
-        {/* ── VS badge centered on divider ── */}
-        <circle cx="256" cy="300" r="22" fill="#7C3AED" clipPath="url(#shield-clip)" />
-        <circle
-          cx="256" cy="300" r="22"
-          fill="none"
-          stroke="white"
-          strokeOpacity="0.9"
-          strokeWidth="2.5"
-          clipPath="url(#shield-clip)"
-        />
-        {/* "VS" text */}
-        <text
-          x="256" y="306"
-          textAnchor="middle"
-          fill="white"
-          fontSize="15"
-          fontWeight="800"
-          fontFamily="system-ui, -apple-system, sans-serif"
-          letterSpacing="-0.5"
-          clipPath="url(#shield-clip)"
-        >
-          VS
-        </text>
-
-        {/* ── Lock shackle at top of shield (privacy metaphor) ── */}
-        <path
-          d="M238 120 A18 18 0 0 1 274 120"
-          fill="none"
-          stroke="white"
-          strokeOpacity="0.85"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-
-        {/* ── Small lock body on shield apex ── */}
-        <rect
-          x="228" y="117" width="56" height="38"
-          rx="9"
-          fill="#4C1D95"
-          stroke="white"
-          strokeOpacity="0.85"
-          strokeWidth="5"
-        />
-        {/* Keyhole dot */}
-        <circle cx="256" cy="131" r="6" fill="white" fillOpacity="0.9" />
-        {/* Keyhole slot */}
-        <rect x="252" y="131" width="8" height="10" rx="2" fill="white" fillOpacity="0.9" />
-      </svg>
+        {state.mode === 'invite' && state.category && state.value !== null && (
+          <InviteChallenge
+            category={state.category}
+            value={state.value}
+            onBack={() => setState({ ...state, value: null })}
+          />
+        )}
+      </div>
     </div>
   );
+}
+
+function calculatePercentile(categoryId: string, value: number): number {
+  const distributions: Record<string, { mean: number; stdDev: number }> = {
+    salary: { mean: 25, stdDev: 15 },
+    height: { mean: 170, stdDev: 8 },
+    age: { mean: 35, stdDev: 12 },
+    length: { mean: 13, stdDev: 2.5 },
+  };
+
+  const dist = distributions[categoryId];
+  const z = (value - dist.mean) / dist.stdDev;
+  const percentile = normalCDF(z) * 100;
+
+  return Math.max(1, Math.min(99, Math.round(percentile)));
+}
+
+function normalCDF(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
+}
+
+function generateOpponentValue(category: Category, userValue: number): number {
+  const range = userValue * 0.3;
+  const min = Math.max(category.min, userValue - range);
+  const max = Math.min(category.max, userValue + range);
+  const opponentValue = min + Math.random() * (max - min);
+
+  if (category.id === 'salary') {
+    return Math.round(opponentValue * 10) / 10;
+  }
+  return Math.round(opponentValue);
 }
