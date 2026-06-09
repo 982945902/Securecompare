@@ -1,4 +1,5 @@
 pub mod compare;
+pub mod dpph;
 pub mod encoding;
 pub mod encrypt;
 pub mod error;

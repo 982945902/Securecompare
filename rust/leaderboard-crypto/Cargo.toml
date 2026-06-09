@@ -10,6 +10,9 @@ name = "securecompare_leaderboard_crypto"
 path = "src/lib.rs"
 
 [dependencies]
+ark-bls12-381 = "0.6"
+ark-ec = "0.6"
+ark-ff = "0.6"
 rand_core = "0.6"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
