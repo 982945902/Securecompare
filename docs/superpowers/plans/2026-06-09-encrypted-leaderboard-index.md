@@ -229,3 +229,17 @@ Expected: commit succeeds.
 - Spec coverage: the plan covers index insertion, equal aggregation, duplicate rejection, rank ranges, append-only JSONL persistence, and replay rebuild.
 - Placeholder scan: no implementation step contains TBD/TODO/fill-in placeholders.
 - Type consistency: the plan consistently uses `EncryptedOrderIndex`, `compareEncryptedEntries`, `entry_submitted`, `appendLeaderboardEvent`, `loadLeaderboardEvents`, and `rebuildLeaderboardIndex`.
+
+## Follow-Up Task: Rust/WASM Compare Adapter
+
+**Files:**
+
+- Create: `wasm/leaderboard-crypto/Cargo.toml`
+- Create: `wasm/leaderboard-crypto/src/lib.rs`
+- Create: `scripts/build-leaderboard-wasm.mjs`
+- Create: `server/leaderboard/cryptoAdapter.mjs`
+- Create: `server/leaderboard/cryptoAdapter.test.mjs`
+- Modify: `package.json`
+- Modify: `.gitignore`
+
+This follow-up connects the encrypted order index to real Rust/WASM m-H-ORE artifacts through a demo authority wrapper. It must keep the wrapper clearly marked as demo-only because it can generate encrypted material from raw values.

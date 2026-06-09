@@ -134,3 +134,14 @@ Build:
 4. Vitest coverage for all three modules.
 
 The slice should produce a testable encrypted leaderboard kernel without adding UI routes.
+
+## First WASM Adapter Slice
+
+The next integration slice adds `wasm/leaderboard-crypto` as a thin `wasm-bindgen` wrapper over `rust/leaderboard-crypto`.
+
+The MVP wrapper may expose a `DemoLeaderboardAuthority` for local integration tests. This object can generate ciphertext and token material from a raw value, so it is not the final production server authority boundary. It exists to prove the server index can consume real Rust/WASM m-H-ORE artifacts.
+
+Production integration should split this demo capability into:
+
+- Browser-side encryption package: normalizes raw values and creates encrypted submissions.
+- Server-side comparison package: compares encrypted submissions and does not expose a raw-value encryption API.

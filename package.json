@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build:wasm": "node scripts/build-mpz-wasm.mjs",
+    "build:wasm": "node scripts/build-mpz-wasm.mjs && node scripts/build-leaderboard-wasm.mjs",
+    "build:leaderboard-wasm": "node scripts/build-leaderboard-wasm.mjs",
     "build": "npm run build:wasm && vite build",
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev:signal\" \"npm run dev\"",

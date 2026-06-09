@@ -1,4 +1,5 @@
 dist/
 node_modules/
 wasm/mpz-compare/target/
+wasm/leaderboard-crypto/target/
 rust/leaderboard-crypto/target/
