@@ -12,9 +12,9 @@
 
 | Construction | Purpose | Implementation Status |
 |--------------|---------|-----------------------|
-| DPPH | Deterministic property-preserving hash with predicate `P(x, y) = 1 iff x = y +/- 1` | Mapped from text; formulas in the paper figure still need visual confirmation |
-| m-ORE | Base multi-client order-revealing encryption built from DPPH | Mapped from text; Fig. 2 formulas need visual confirmation |
-| m-H-ORE | Hybrid/enhanced m-ORE that compares bit length first with small-domain ORE | Mapped from text; Fig. 3 formulas need visual confirmation |
+| DPPH | Deterministic property-preserving hash with predicate `P(x, y) = 1 iff x = y +/- 1` | Formula visually confirmed from page 5 |
+| m-ORE | Base multi-client order-revealing encryption built from DPPH | Fig. 2 visually confirmed from page 8 |
+| m-H-ORE | Hybrid/enhanced m-ORE that compares bit length first with small-domain ORE | Fig. 3 visually confirmed from page 11 |
 | SD-ORE | Small-domain ORE from Lewi-Wu used by m-H-ORE for bit-length comparison | Mapped from text |
 
 ## Preliminaries
@@ -88,10 +88,35 @@ Paper inputs and outputs:
 - `Hash(hk, x)` produces three group elements derived from `H(k1, x)`, `H(k1, x + 1)`, and `H(k1, x - 1)`.
 - `Test` evaluates pairing equations and returns `1` if a neighbor predicate is detected.
 
+Visually confirmed DPPH formulas:
+
+```text
+DPPH.KGen(1^lambda):
+  sample groups (G1, G2, GT, e) of prime order p
+  sample k1 <- {0,1}^lambda
+  sample k2,1, k2,2 <- Zp
+  hk = (k1, (k2,1, k2,2))
+  tk = (g1^k2,1, g2^k2,2)
+  pp = (G1, G2, GT, e)
+
+DPPH.Hash(hk, x):
+  h1 = g1^(k2,1 * H(k1, x))
+  h2 = g2^(k2,2 * H(k1, x + 1))
+  h3 = g2^(k2,2 * H(k1, x - 1))
+  h = (h1, h2, h3)
+
+DPPH.Test(tk, h, h'):
+  tk = (g1^k2,1, g2^k2,2)
+  return 1 if:
+    e(h1, g2^k2,2) = e(g1^k2,1, h2')
+    or
+    e(h1, g2^k2,2) = e(g1^k2,1, h3')
+  otherwise return 0
+```
+
 Implementation notes:
 
 - DPPH preserves the predicate `x = y +/- 1`.
-- The paper text extraction contains the high-level formulas, but exact exponent placement must be visually confirmed from the PDF before coding.
 - DPPH hash values are deterministic, which is central to reducing m-ORE comparison from `O(n^2)` to `O(n)` pairings.
 
 Rust type mapping:
@@ -126,6 +151,18 @@ Setup mapping:
   - Test key contains `(g1^(k2,1), g2^(k2,2))`.
   - Query key is described as `qk = (k1, g2^(k2,2))`.
 
+Fig. 2 confirmed setup formula:
+
+```text
+m-ORE.Setup(1^lambda):
+  (pp, hk, tk) <- DPPH.KGen(1^lambda)
+  hk = (k1, (k2,1, k2,2))
+  tk = (g1^k2,1, g2^k2,2)
+  msk = hk
+  qk = (k1, g2^k2,2)
+  return (msk, qk)
+```
+
 Encryption mapping:
 
 - Paper input: `msk`, message `m in {0,1}^n`.
@@ -135,6 +172,22 @@ Encryption mapping:
   - For each encoded value `u_i`, run `DPPH.Hash(hk, u_i)`.
   - Use only the first DPPH hash component `h1` as ciphertext element `v_i`.
   - Choose a random permutation `pi` and permute ciphertext elements.
+
+Fig. 2 confirmed encryption formula:
+
+```text
+m-ORE.Enc(msk, m):
+  sample r <- Zp
+  c0 = g1^(k2,1 * r)
+  set k2,1_bar = k2,1 * r
+  set hk_bar = (k1, (k2,1_bar, k2,2))
+  for m = (b1 ... bn), i in 1..n:
+    ui = F(i, b1 b2 ... b(i-1) || 0^(n-i+1)) + bi mod 2^lambda
+    vi = h1 <- DPPH.Hash(hk_bar, ui)
+  sample random permutation pi: [n] -> [n]
+  ci = v_pi(i)
+  return c = (c0, c1, ..., cn)
+```
 
 Token generation mapping:
 
@@ -146,6 +199,22 @@ Token generation mapping:
   - It can compute the last two DPPH hash components `h2` and `h3` directly using `qk`.
   - Choose a fresh random permutation and permute token elements.
 
+Fig. 2 confirmed token formula:
+
+```text
+m-ORE.TGen(qk, m_bar):
+  qk = (k1, g2^k2,2)
+  sample r' <- Zp
+  t0 = g2^(k2,2 * r')
+  for m_bar = (b1 ... bn), i in 1..n:
+    ui = F(i, b1 b2 ... b(i-1) || 0^(n-i+1)) + bi mod 2^lambda
+    t_i,1 = g2^(k2,2 * r' * H(k1, ui + 1))
+    t_i,2 = g2^(k2,2 * r' * H(k1, ui - 1))
+  sample random permutation pi: [n] -> [n]
+  ti = (t_pi(i),1, t_pi(i),2)
+  return t = (t0, (t1,1, t1,2), ..., (tn,1, tn,2))
+```
+
 Comparison mapping:
 
 - Paper input: ciphertext `c`, token `t`.
@@ -156,9 +225,21 @@ Comparison mapping:
   - It outputs ordering based on the matching indexes.
   - Remark 2 states comparison can be reduced to at most `3n` pairings by reusing pairing results.
 
-Paper ambiguity:
+Fig. 2 confirmed comparison formula:
 
-- Fig. 2 contains exact ciphertext/token tuple structure, random factors, and compare equations. Text extraction references `c=(c0,c1,...,cn)` and `t=(t0,(t1,1,t1,2),...,(tn,1,tn,2))`, but not every exponent/randomizer is reliably extracted. Implementation must visually verify Fig. 2 before writing crypto internals.
+```text
+m-ORE.Cmp(c, t):
+  c = (c0, c1, ..., cn)
+  t = (t0, (t1,1, t1,2), ..., (tn,1, tn,2))
+  tk = (c0, t0)
+  run DPPH.Test(tk, ci, tj,1) and DPPH.Test(tk, ci, tj,2) for every i,j in [n]
+  if exists i*,j* with DPPH.Test(tk, c_i*, t_j*,1) = 1:
+    return 1, meaning m_ciphertext > m_token
+  else if DPPH.Test(tk, c_i*, t_j*,2) = 1:
+    return 0, meaning m_ciphertext < m_token
+  else:
+    return bottom, meaning m_ciphertext = m_token
+```
 
 ## m-H-ORE Construction Mapping
 
@@ -217,9 +298,7 @@ Leakage:
 - m-H-ORE leaks the order of bit lengths in addition to base m-ORE leakage.
 - The paper calls this a trade-off between efficiency and security.
 
-Paper ambiguity:
-
-- Fig. 3 contains exact tuple syntax and should be visually confirmed before implementation.
+Fig. 3 visually confirmed the tuple syntax and the two-phase comparison structure. m-H-ORE reuses the base m-ORE ciphertext/token components and prepends SD-ORE right/left ciphertexts for bit-length comparison.
 
 ## Leakage Mapping
 
@@ -272,9 +351,7 @@ Implementation docs must describe both leakages plainly.
 
 ## Blocking Questions Before Crypto Internals
 
-1. Verify exact Fig. 2 ciphertext and token tuple structure.
-2. Verify exact Fig. 2 randomization factors `r`, `r'`, `r1`, `r2`, and exponent placement.
-3. Verify whether the practical leaderboard API should store both `OreCiphertext` and `OreToken` per submission or use role-specific records.
-4. Select a pure Rust Type-3 pairing curve compatible with the construction.
-5. Define a secure PRF-to-field mapping for `H`.
-6. Decide whether to implement base m-ORE first, then m-H-ORE, or scaffold both but only complete base m-ORE first.
+1. Verify whether the practical leaderboard API should store both `OreCiphertext` and `OreToken` per submission or use role-specific records.
+2. Select a pure Rust Type-3 pairing curve compatible with the construction.
+3. Define a secure PRF-to-field mapping for `H`.
+4. Decide whether to implement base m-ORE first, then m-H-ORE, or scaffold both but only complete base m-ORE first.
