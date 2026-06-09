@@ -8,21 +8,21 @@ use crate::error::OreError;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SdOreSecretKey {
-    key: [u8; 32],
-    permutation: Vec<u32>,
-    inverse_permutation: Vec<u32>,
+    pub(crate) key: [u8; 32],
+    pub(crate) permutation: Vec<u32>,
+    pub(crate) inverse_permutation: Vec<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SdOreLeftCiphertext {
-    prf_at_permuted_value: [u8; 32],
-    permuted_value: u32,
+    pub(crate) prf_at_permuted_value: [u8; 32],
+    pub(crate) permuted_value: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SdOreRightCiphertext {
-    nonce: [u8; 32],
-    masked_cmp: Vec<u8>,
+    pub(crate) nonce: [u8; 32],
+    pub(crate) masked_cmp: Vec<u8>,
 }
 
 impl SdOreSecretKey {

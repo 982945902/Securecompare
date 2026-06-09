@@ -12,26 +12,26 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct MhOreMasterSecret {
-    more_master: MoreMasterSecret,
-    sd_ore_key: SdOreSecretKey,
+    pub(crate) more_master: MoreMasterSecret,
+    pub(crate) sd_ore_key: SdOreSecretKey,
 }
 
 #[derive(Debug, Clone)]
 pub struct MhOreQueryKey {
-    more_query: MoreQueryKey,
-    sd_ore_key: SdOreSecretKey,
+    pub(crate) more_query: MoreQueryKey,
+    pub(crate) sd_ore_key: SdOreSecretKey,
 }
 
 #[derive(Debug, Clone)]
 pub struct MhOreCiphertext {
-    bit_length_right: SdOreRightCiphertext,
-    more_ciphertext: MoreCiphertext,
+    pub(crate) bit_length_right: SdOreRightCiphertext,
+    pub(crate) more_ciphertext: MoreCiphertext,
 }
 
 #[derive(Debug, Clone)]
 pub struct MhOreToken {
-    bit_length_left: SdOreLeftCiphertext,
-    more_token: MoreToken,
+    pub(crate) bit_length_left: SdOreLeftCiphertext,
+    pub(crate) more_token: MoreToken,
 }
 
 pub fn setup<R: CryptoRng + RngCore>(

@@ -13,6 +13,7 @@ path = "src/lib.rs"
 ark-bls12-381 = "0.6"
 ark-ec = "0.6"
 ark-ff = "0.6"
+ark-serialize = "0.6"
 rand_core = "0.6"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"

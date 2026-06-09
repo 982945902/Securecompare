@@ -1,3 +1,4 @@
+pub mod codec;
 pub mod compare;
 pub mod dpph;
 pub mod encoding;

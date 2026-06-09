@@ -16,4 +16,7 @@ pub enum OreError {
 
     #[error("ciphertext and token parameters do not match")]
     ParameterMismatch,
+
+    #[error("serialization failed: {0}")]
+    Serialization(String),
 }

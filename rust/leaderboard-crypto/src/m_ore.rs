@@ -14,27 +14,27 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct MoreMasterSecret {
-    hash_key: DpphHashKey,
+    pub(crate) hash_key: DpphHashKey,
 }
 
 #[derive(Debug, Clone)]
 pub struct MoreQueryKey {
-    k1: [u8; 32],
-    g2_k2_2: G2Projective,
+    pub(crate) k1: [u8; 32],
+    pub(crate) g2_k2_2: G2Projective,
 }
 
 #[derive(Debug, Clone)]
 pub struct MoreCiphertext {
-    c0: G1Projective,
-    components: Vec<G1Projective>,
-    params: SecurityParams,
+    pub(crate) c0: G1Projective,
+    pub(crate) components: Vec<G1Projective>,
+    pub(crate) params: SecurityParams,
 }
 
 #[derive(Debug, Clone)]
 pub struct MoreToken {
-    t0: G2Projective,
-    components: Vec<(G2Projective, G2Projective)>,
-    params: SecurityParams,
+    pub(crate) t0: G2Projective,
+    pub(crate) components: Vec<(G2Projective, G2Projective)>,
+    pub(crate) params: SecurityParams,
 }
 
 pub fn setup<R: CryptoRng + RngCore>(rng: &mut R) -> (MoreMasterSecret, MoreQueryKey) {
