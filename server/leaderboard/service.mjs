@@ -12,17 +12,17 @@ export async function createLeaderboardService({
   const adapter = compareAdapter ?? (await createLeaderboardCompareAdapter());
   const events = await loadLeaderboardEvents(eventLogPath);
   const indexes = new Map();
+  const fingerprintEntries = new Map();
   for (const event of events) {
     if (!event || event.type !== 'entry_submitted') {
       throw new Error(`unknown-leaderboard-event:${event?.type ?? 'missing'}`);
     }
-    await indexFor(indexes, event.entry.schemaId, adapter).insert(event.entry);
+    await applyEntry(indexes, fingerprintEntries, event.entry, adapter);
   }
 
   return {
     async submitEntry(entry) {
-      const index = indexFor(indexes, entry.schemaId, adapter);
-      await index.insert(entry);
+      const index = await applyEntry(indexes, fingerprintEntries, entry, adapter);
       await appendLeaderboardEvent(eventLogPath, {
         type: 'entry_submitted',
         entry,
@@ -45,6 +45,28 @@ export async function createLeaderboardService({
       };
     },
   };
+}
+
+async function applyEntry(indexes, fingerprintEntries, entry, adapter) {
+  const index = indexFor(indexes, entry.schemaId, adapter);
+  const fingerprintKey = fingerprintMapKey(entry);
+  const previousEntryId = fingerprintKey ? fingerprintEntries.get(fingerprintKey) : null;
+  if (previousEntryId) {
+    index.remove(previousEntryId);
+  }
+
+  await index.insert(entry);
+  if (fingerprintKey) {
+    fingerprintEntries.set(fingerprintKey, entry.entryId);
+  }
+  return index;
+}
+
+function fingerprintMapKey(entry) {
+  if (typeof entry?.fingerprint !== 'string' || entry.fingerprint.length === 0) {
+    return null;
+  }
+  return `${entry.schemaId}:${entry.fingerprint}`;
 }
 
 function indexFor(indexes, schemaId, adapter) {

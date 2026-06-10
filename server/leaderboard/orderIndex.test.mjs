@@ -72,4 +72,28 @@ describe('EncryptedOrderIndex', () => {
     expect(index.rankRangeForEntry('high-a')).toEqual({ start: 4, end: 4 });
     expect(index.rankRangeForEntry('missing')).toBeNull();
   });
+
+  it('removes entries and drops empty buckets', async () => {
+    const index = new EncryptedOrderIndex({ compareEncryptedEntries: fixtureCompare });
+
+    await index.insert(entry('low-a', 10));
+    await index.insert(entry('mid-a', 20));
+    await index.insert(entry('mid-b', 20));
+    await index.insert(entry('high-a', 30));
+
+    expect(index.remove('mid-a')).toBe(true);
+    expect(index.rankRangeForEntry('mid-b')).toEqual({ start: 2, end: 2 });
+    expect(index.listBuckets().map((bucket) => bucket.entryIds)).toEqual([
+      ['low-a'],
+      ['mid-b'],
+      ['high-a'],
+    ]);
+
+    expect(index.remove('mid-b')).toBe(true);
+    expect(index.listBuckets().map((bucket) => bucket.entryIds)).toEqual([
+      ['low-a'],
+      ['high-a'],
+    ]);
+    expect(index.remove('missing')).toBe(false);
+  });
 });

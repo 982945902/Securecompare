@@ -48,6 +48,36 @@ export class EncryptedOrderIndex {
     return { bucketId: entry.entryId, inserted: true };
   }
 
+  remove(entryId) {
+    const bucket = this.entriesById.get(entryId);
+    if (!bucket) {
+      return false;
+    }
+
+    const entryIndex = bucket.entryIds.indexOf(entryId);
+    if (entryIndex < 0) {
+      this.entriesById.delete(entryId);
+      return false;
+    }
+
+    bucket.entryIds.splice(entryIndex, 1);
+    bucket.entries.splice(entryIndex, 1);
+    bucket.count -= 1;
+    this.entriesById.delete(entryId);
+
+    if (bucket.count > 0) {
+      bucket.representative = bucket.entries[0];
+      bucket.bucketId = bucket.representative.entryId;
+      return true;
+    }
+
+    const bucketIndex = this.buckets.indexOf(bucket);
+    if (bucketIndex >= 0) {
+      this.buckets.splice(bucketIndex, 1);
+    }
+    return true;
+  }
+
   listBuckets() {
     return this.buckets.map((bucket) => ({
       bucketId: bucket.bucketId,
@@ -94,6 +124,12 @@ function validateEntry(entry) {
     if (typeof entry[field] !== 'string' || entry[field].length === 0) {
       throw new Error(`missing-${field}`);
     }
+  }
+  if (
+    entry.fingerprint !== undefined &&
+    (typeof entry.fingerprint !== 'string' || entry.fingerprint.length === 0)
+  ) {
+    throw new Error('invalid-fingerprint');
   }
 }
 
