@@ -238,8 +238,10 @@ Expected: commit succeeds.
 - Create: `wasm/leaderboard-crypto/src/lib.rs`
 - Create: `scripts/build-leaderboard-wasm.mjs`
 - Create: `server/leaderboard/cryptoAdapter.mjs`
+- Create: `server/leaderboard/cryptoWasm.mjs`
+- Create: `server/leaderboard/demoBrowserCrypto.mjs`
 - Create: `server/leaderboard/cryptoAdapter.test.mjs`
 - Modify: `package.json`
 - Modify: `.gitignore`
 
-This follow-up connects the encrypted order index to real Rust/WASM m-H-ORE artifacts through a demo authority wrapper. It must keep the wrapper clearly marked as demo-only because it can generate encrypted material from raw values.
+This follow-up connects the encrypted order index to real Rust/WASM m-H-ORE artifacts through a demo authority wrapper. It keeps server comparison separate from demo browser encryption, and tests must assert that the server compare adapter does not expose `encryptEntry`.

@@ -139,9 +139,11 @@ The slice should produce a testable encrypted leaderboard kernel without adding 
 
 The next integration slice adds `wasm/leaderboard-crypto` as a thin `wasm-bindgen` wrapper over `rust/leaderboard-crypto`.
 
-The MVP wrapper may expose a `DemoLeaderboardAuthority` for local integration tests. This object can generate ciphertext and token material from a raw value, so it is not the final production server authority boundary. It exists to prove the server index can consume real Rust/WASM m-H-ORE artifacts.
+The MVP wrapper exposes a `DemoLeaderboardAuthority` for local integration tests. This object can generate ciphertext and token material from a raw value, so it is not the final production authority boundary. It exists to prove the server index can consume real Rust/WASM m-H-ORE artifacts.
 
-Production integration should split this demo capability into:
+The JavaScript adapter layer already separates roles:
 
-- Browser-side encryption package: normalizes raw values and creates encrypted submissions.
-- Server-side comparison package: compares encrypted submissions and does not expose a raw-value encryption API.
+- `demoBrowserCrypto.mjs`: simulates the browser-side encryption package and creates encrypted submissions.
+- `cryptoAdapter.mjs`: exposes only server-side encrypted comparison and does not expose a raw-value encryption API.
+
+Production integration should move the browser-side encryption adapter into the frontend package and replace the demo authority seed with real key material distribution.
