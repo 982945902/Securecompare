@@ -28,6 +28,7 @@ export type EncryptedLeaderboardEntry = {
   ciphertext: string;
   token: string;
   submittedAt: string;
+  fingerprint?: string;
 };
 
 let leaderboardModulePromise: Promise<LeaderboardWasmModule> | null = null;

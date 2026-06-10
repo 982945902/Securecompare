@@ -122,7 +122,7 @@ export function EncryptedLeaderboard({ category, onBack }: Props) {
 
         <div className="mt-4 flex items-center gap-2 text-sm text-purple-800 bg-purple-50 rounded-xl p-3">
           <Lock size={16} />
-          <span>提交包不包含明文 value；服务端 adapter 只暴露密文比较接口。</span>
+          <span>提交包不包含明文 value；同一浏览器重复提交会更新旧成绩，不会重复增加 count。</span>
         </div>
 
         {rankRange && (

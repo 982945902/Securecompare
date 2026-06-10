@@ -1,4 +1,5 @@
 import { encryptLeaderboardEntry, type EncryptedLeaderboardEntry } from './leaderboardCrypto';
+import { getLeaderboardFingerprint } from './leaderboardFingerprint';
 import type { Category } from '../App';
 
 export type LeaderboardBucket = {
@@ -34,6 +35,7 @@ export async function submitLeaderboardValue({
     valueBits: valueBitsForCategory(category),
     submittedAt: new Date().toISOString(),
   });
+  entry.fingerprint = await getLeaderboardFingerprint(category.id);
 
   return postEncryptedEntry(entry);
 }

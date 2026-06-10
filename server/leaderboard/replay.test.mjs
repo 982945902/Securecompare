@@ -41,6 +41,25 @@ describe('leaderboard replay', () => {
     expect(index.rankRangeForEntry('mid-b')).toEqual({ start: 2, end: 3 });
   });
 
+  it('keeps only the latest event for each fingerprint when replaying', async () => {
+    const firstAlice = event('alice-first', 30);
+    firstAlice.entry.fingerprint = 'fp-alice';
+    const bob = event('bob', 20);
+    bob.entry.fingerprint = 'fp-bob';
+    const secondAlice = event('alice-second', 10);
+    secondAlice.entry.fingerprint = 'fp-alice';
+
+    const index = await rebuildLeaderboardIndex({
+      events: [firstAlice, bob, secondAlice],
+      compareEncryptedEntries: fixtureCompare,
+    });
+
+    expect(index.listBuckets().map((bucket) => bucket.entryIds)).toEqual([
+      ['alice-second'],
+      ['bob'],
+    ]);
+  });
+
   it('fails closed on unknown event types', async () => {
     await expect(
       rebuildLeaderboardIndex({
