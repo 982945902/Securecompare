@@ -7,6 +7,7 @@ import { BattleMatching } from './components/BattleMatching';
 import { BattleResult } from './components/BattleResult';
 import { InviteChallenge } from './components/InviteChallenge';
 import { InviteAccept } from './components/InviteAccept';
+import { EncryptedLeaderboard } from './components/EncryptedLeaderboard';
 
 export type Category = {
   id: string;
@@ -57,7 +58,7 @@ export const categories: Category[] = [
   },
 ];
 
-export type Mode = 'solo' | 'battle' | 'invite';
+export type Mode = 'solo' | 'battle' | 'invite' | 'leaderboard';
 
 export type CompareState = {
   mode: Mode | null;
@@ -176,11 +177,18 @@ export default function App() {
           />
         )}
 
-        {state.category && state.value === null && (
+        {state.category && state.value === null && state.mode !== 'leaderboard' && (
           <CompareForm
             category={state.category}
             mode={state.mode!}
             onCompare={handleCompare}
+            onBack={() => setState({ ...state, category: null })}
+          />
+        )}
+
+        {state.mode === 'leaderboard' && state.category && (
+          <EncryptedLeaderboard
+            category={state.category}
             onBack={() => setState({ ...state, category: null })}
           />
         )}

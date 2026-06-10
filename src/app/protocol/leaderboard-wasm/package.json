@@ -1,0 +1,15 @@
+{
+  "name": "securecompare-leaderboard-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "securecompare_leaderboard_wasm_bg.wasm",
+    "securecompare_leaderboard_wasm.js",
+    "securecompare_leaderboard_wasm.d.ts"
+  ],
+  "main": "securecompare_leaderboard_wasm.js",
+  "types": "securecompare_leaderboard_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

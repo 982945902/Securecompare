@@ -1,0 +1,33 @@
+[package]
+name = "securecompare-leaderboard-crypto"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "UNLICENSED"
+
+[lib]
+name = "securecompare_leaderboard_crypto"
+path = "src/lib.rs"
+
+[dependencies]
+ark-bls12-381 = "0.6"
+ark-ec = "0.6"
+ark-ff = "0.6"
+ark-serialize = "0.6"
+rand_core = "0.6"
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+thiserror = "2"
+
+[dev-dependencies]
+criterion = "0.5"
+rand_chacha = "0.3"
+
+[features]
+default = []
+
+[workspace]
+
+[[bench]]
+name = "ore_bench"
+harness = false
