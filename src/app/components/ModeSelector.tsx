@@ -1,4 +1,4 @@
-import { Swords, User, Link } from 'lucide-react';
+import { ListOrdered, Swords, User, Link } from 'lucide-react';
 import { Mode } from '../App';
 
 type Props = {
@@ -7,7 +7,7 @@ type Props = {
 
 export function ModeSelector({ onSelectMode }: Props) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
       <button
         onClick={() => onSelectMode('solo')}
         className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 group relative overflow-hidden"
@@ -70,6 +70,30 @@ export function ModeSelector({ onSelectMode }: Props) {
           <div className="mt-3">
             <span className="bg-green-100 text-green-600 text-xs px-3 py-1 rounded-full">
               🔗 NEW
+            </span>
+          </div>
+        </div>
+      </button>
+
+      <button
+        onClick={() => onSelectMode('leaderboard')}
+        className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 group relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative">
+          <div className="w-16 h-16 mx-auto mb-5 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+            <ListOrdered size={32} className="text-purple-600" />
+          </div>
+          <h3 className="text-xl mb-2">加密排行榜</h3>
+          <p className="text-gray-600 text-sm mb-4">异步提交加密成绩</p>
+          <div className="text-xs text-gray-500 space-y-1 text-left">
+            <p>✓ 浏览器本地生成密文</p>
+            <p>✓ 服务端只比较密文顺序</p>
+            <p>✓ JSONL 持久化索引</p>
+          </div>
+          <div className="mt-3">
+            <span className="bg-purple-100 text-purple-600 text-xs px-3 py-1 rounded-full">
+              ORE
             </span>
           </div>
         </div>

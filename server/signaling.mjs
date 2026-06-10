@@ -1,13 +1,19 @@
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
+import { createLeaderboardService } from './leaderboard/service.mjs';
+import { handleLeaderboardRequest } from './leaderboard/http.mjs';
 
 const defaultPort = Number.parseInt(process.env.SIGNALING_PORT ?? '8787', 10);
 
-export function createSignalingServer({ server }) {
+export function createSignalingServer({ server, leaderboardService = null }) {
   const rooms = new Map();
   const wss = new WebSocketServer({ noServer: true });
 
-  server.on('request', (req, res) => {
+  server.on('request', async (req, res) => {
+    if (leaderboardService && (await handleLeaderboardRequest(req, res, leaderboardService))) {
+      return;
+    }
+
     if (req.url === '/healthz') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
@@ -114,8 +120,9 @@ function isSignal(signal) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const server = createServer();
-  createSignalingServer({ server });
+  const leaderboardService = await createLeaderboardService();
+  createSignalingServer({ server, leaderboardService });
   server.listen(defaultPort, () => {
-    console.log(`Securecompare signaling server listening on http://127.0.0.1:${defaultPort}`);
+    console.log(`Securecompare signaling + leaderboard server listening on http://127.0.0.1:${defaultPort}`);
   });
 }

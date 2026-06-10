@@ -67,15 +67,34 @@ describe('signaling server', () => {
       signal: { kind: 'ice', data: { candidate: 'b' } },
     });
   });
+
+  it('serves leaderboard routes when a leaderboard service is attached', async () => {
+    const leaderboardService = {
+      listEntries: ({ schemaId }) => ({
+        buckets: [{ bucketId: schemaId, count: 1, entries: [] }],
+      }),
+    };
+    const { httpUrl } = await startServer({ leaderboardService });
+
+    const response = await fetch(`${httpUrl}/leaderboard/entries?schemaId=score-v1`);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      buckets: [{ bucketId: 'score-v1', count: 1, entries: [] }],
+    });
+  });
 });
 
-async function startServer() {
+async function startServer(options = {}) {
   const server = createServer();
-  createSignalingServer({ server });
+  createSignalingServer({ server, ...options });
   await new Promise((resolve) => server.listen(0, resolve));
   servers.push(server);
   const address = server.address();
-  return { url: `ws://127.0.0.1:${address.port}` };
+  return {
+    url: `ws://127.0.0.1:${address.port}`,
+    httpUrl: `http://127.0.0.1:${address.port}`,
+  };
 }
 
 function connect(url) {

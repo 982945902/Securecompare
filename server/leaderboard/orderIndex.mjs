@@ -31,6 +31,7 @@ export class EncryptedOrderIndex {
 
       if (comparison === 'equal') {
         this.buckets[mid].entryIds.push(entry.entryId);
+        this.buckets[mid].entries.push(entry);
         this.buckets[mid].count += 1;
         this.entriesById.set(entry.entryId, this.buckets[mid]);
         return { bucketId: this.buckets[mid].bucketId, inserted: false };
@@ -53,6 +54,7 @@ export class EncryptedOrderIndex {
       representative: bucket.representative,
       count: bucket.count,
       entryIds: [...bucket.entryIds],
+      entries: [...bucket.entries],
     }));
   }
 
@@ -80,6 +82,7 @@ function createBucket(entry) {
     representative: entry,
     count: 1,
     entryIds: [entry.entryId],
+    entries: [entry],
   };
 }
 
