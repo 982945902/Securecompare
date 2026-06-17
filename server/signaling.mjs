@@ -19,6 +19,13 @@ export function createSignalingServer({ server, leaderboardService = null }) {
       res.end(JSON.stringify({ ok: true }));
       return;
     }
+    if (req.url === '/turn-credentials') {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+      }));
+      return;
+    }
     res.writeHead(404);
     res.end('Not found');
   });

@@ -28,9 +28,7 @@ export type InviteChallengeSession = {
   close: () => void;
 };
 
-const rtcConfig: RTCConfiguration = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-};
+const defaultIceServers: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 const signalingTimeoutMs = 15000;
 export const dataChannelTimeoutMs = 5 * 60 * 1000;
@@ -41,7 +39,7 @@ export async function createInviteChallenge(
 ): Promise<InviteChallengeSession> {
   const roomId = crypto.randomUUID();
   const signaling = await connectSignaling(roomId);
-  const pc = new RTCPeerConnection(rtcConfig);
+  const pc = new RTCPeerConnection(await createRtcConfig());
   const channel = pc.createDataChannel('securecompare', { ordered: true });
   const remoteCandidates = createRemoteCandidateQueue(pc);
 
@@ -86,7 +84,7 @@ export async function acceptInviteChallenge(
   }
 
   const signaling = await connectSignaling(challenge.roomId);
-  const pc = new RTCPeerConnection(rtcConfig);
+  const pc = new RTCPeerConnection(await createRtcConfig());
   const remoteCandidates = createRemoteCandidateQueue(pc);
 
   pc.addEventListener('icecandidate', (event) => {
@@ -234,6 +232,26 @@ function waitForChannelOpen(channel: RTCDataChannel, timeoutMs: number): Promise
   }), timeoutMs, 'DataChannel 连接超时，请确认双方页面同时在线；跨网络失败时才需要 TURN 中继');
 }
 
+export async function createRtcConfig(
+  fetchTurnCredentials: typeof fetch = globalThis.fetch.bind(globalThis),
+): Promise<RTCConfiguration> {
+  try {
+    const response = await fetchTurnCredentials(getTurnCredentialsUrl(), {
+      headers: { accept: 'application/json' },
+    });
+    if (!response.ok) return { iceServers: defaultIceServers };
+
+    const payload = await response.json() as { iceServers?: unknown };
+    if (!Array.isArray(payload.iceServers) || !payload.iceServers.every(isIceServer)) {
+      return { iceServers: defaultIceServers };
+    }
+
+    return { iceServers: payload.iceServers };
+  } catch {
+    return { iceServers: defaultIceServers };
+  }
+}
+
 function getSignalingUrl(roomId: string): string {
   const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
   const configured = env?.VITE_SIGNALING_URL;
@@ -243,6 +261,37 @@ function getSignalingUrl(roomId: string): string {
 
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.hostname}:8787/ws?room=${encodeURIComponent(roomId)}`;
+}
+
+function getTurnCredentialsUrl(): string {
+  const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
+  const configured = env?.VITE_TURN_CREDENTIALS_URL;
+  if (configured) return configured;
+
+  const signaling = env?.VITE_SIGNALING_URL;
+  if (signaling) {
+    const url = new URL(signaling);
+    url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+    url.pathname = '/turn-credentials';
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  }
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/turn-credentials`;
+  }
+
+  return '/turn-credentials';
+}
+
+function isIceServer(server: unknown): server is RTCIceServer {
+  if (!server || typeof server !== 'object') return false;
+  const urls = (server as RTCIceServer).urls;
+  return (
+    typeof urls === 'string' ||
+    (Array.isArray(urls) && urls.every((url) => typeof url === 'string'))
+  );
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {

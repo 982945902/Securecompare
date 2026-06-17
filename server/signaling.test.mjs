@@ -83,6 +83,17 @@ describe('signaling server', () => {
       buckets: [{ bucketId: 'score-v1', count: 1, entries: [] }],
     });
   });
+
+  it('serves fallback ICE servers for local WebRTC development', async () => {
+    const { httpUrl } = await startServer();
+
+    const response = await fetch(`${httpUrl}/turn-credentials`);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    });
+  });
 });
 
 async function startServer(options = {}) {
