@@ -2,13 +2,17 @@ import { existsSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { DEFAULT_RUST_TOOLCHAIN, ensureRustWasmToolchain, rustToolchainEnv } from './rust-wasm-env.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const crateDir = resolve(root, 'wasm/leaderboard-crypto');
+const toolchain = DEFAULT_RUST_TOOLCHAIN;
 const outDirs = [
   resolve(root, 'server/leaderboard/crypto-wasm'),
   resolve(root, 'src/app/protocol/leaderboard-wasm'),
 ];
+
+ensureRustWasmToolchain({ toolchain });
 
 for (const outDir of outDirs) {
   buildLeaderboardWasm(outDir);
@@ -20,11 +24,8 @@ function buildLeaderboardWasm(outDir) {
   }
 
   const result = spawnSync(
-    'rustup',
+    'wasm-pack',
     [
-      'run',
-      'stable',
-      'wasm-pack',
       'build',
       '.',
       '--profile',
@@ -36,10 +37,7 @@ function buildLeaderboardWasm(outDir) {
     ],
     {
       cwd: crateDir,
-      env: {
-        ...process.env,
-        PATH: `${process.env.HOME}/.cargo/bin:${process.env.PATH ?? ''}`,
-      },
+      env: rustToolchainEnv(process.env, toolchain),
       stdio: 'inherit',
     },
   );
