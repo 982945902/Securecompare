@@ -33,7 +33,7 @@ const rtcConfig: RTCConfiguration = {
 };
 
 const signalingTimeoutMs = 15000;
-const dataChannelTimeoutMs = 20000;
+export const dataChannelTimeoutMs = 5 * 60 * 1000;
 
 export async function createInviteChallenge(
   categoryId: string,
