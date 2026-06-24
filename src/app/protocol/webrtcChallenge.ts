@@ -35,7 +35,8 @@ const fallbackIceServers: RTCIceServer[] = [{ urls: 'stun:stun.cloudflare.com:34
 type InviteTransportMode = 'websocket' | 'webrtc';
 
 const signalingTimeoutMs = 5 * 60 * 1000;
-const transportTimeoutMs = 20000;
+const channelOpenTimeoutMs = 20000;
+const protocolTimeoutMs = 5 * 60 * 1000;
 
 export async function createInviteChallenge(
   categoryId: string,
@@ -176,14 +177,15 @@ function runCompareOverChannel(
   myValue: number,
   role: 'challenger' | 'accepter',
 ): Promise<CompareOutcome> {
-  return withTimeout(new Promise((resolve, reject) => {
-    const transport = new WebRtcByteTransport(channel);
-
-    waitForChannelOpen(channel, transportTimeoutMs)
-      .then(() => mpzProtocolEngine.run({ myValue, role, transport }))
-      .then(resolve)
-      .catch(reject);
-  }), transportTimeoutMs, 'mpz 协议比较超时，请确认发起方页面仍然打开，且没有在同一个标签页里打开挑战链接');
+  const transport = new WebRtcByteTransport(channel);
+  return waitForChannelOpen(channel, channelOpenTimeoutMs)
+    .then(() =>
+      withTimeout(
+        mpzProtocolEngine.run({ myValue, role, transport }),
+        protocolTimeoutMs,
+        'mpz 协议比较超时，请确认发起方页面仍然打开，且没有在同一个标签页里打开挑战链接',
+      ),
+    );
 }
 
 function runCompareOverWebSocketRelay(
@@ -192,13 +194,15 @@ function runCompareOverWebSocketRelay(
   myValue: number,
   role: 'challenger' | 'accepter',
 ): Promise<CompareOutcome> {
-  return withTimeout(
-    signaling
-      .waitForPeers(2)
-      .then(() => mpzProtocolEngine.run({ myValue, role, transport })),
-    transportTimeoutMs,
-    '服务端房间连接超时，请确认双方页面同时在线',
-  );
+  return signaling
+    .waitForPeers(2)
+    .then(() =>
+      withTimeout(
+        mpzProtocolEngine.run({ myValue, role, transport }),
+        protocolTimeoutMs,
+        'mpz 协议比较超时，请确认发起方页面仍然打开，且没有在同一个标签页里打开挑战链接',
+      ),
+    );
 }
 
 function connectSignaling(roomId: string): Promise<SignalingConnection> {
