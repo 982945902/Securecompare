@@ -34,7 +34,7 @@ const fallbackIceServers: RTCIceServer[] = [{ urls: 'stun:stun.cloudflare.com:34
 
 type InviteTransportMode = 'websocket' | 'webrtc';
 
-const signalingTimeoutMs = 15000;
+const signalingTimeoutMs = 5 * 60 * 1000;
 const transportTimeoutMs = 20000;
 
 export async function createInviteChallenge(
