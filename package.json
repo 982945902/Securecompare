@@ -10,7 +10,7 @@
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev:signal\" \"npm run dev\"",
     "dev:signal": "node server/signaling.mjs",
-    "deploy:cf": "npm run build && wrangler deploy",
+    "deploy:cf": "npm run build && npx wrangler deploy",
     "smoke:invite": "node scripts/smoke-webrtc.mjs",
     "smoke:webrtc": "node scripts/smoke-webrtc.mjs",
     "test": "vitest run"

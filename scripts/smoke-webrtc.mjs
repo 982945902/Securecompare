@@ -2,10 +2,12 @@ import { chromium } from 'playwright-core';
 
 const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const appUrl = process.env.APP_URL ?? 'http://localhost:5173/';
+const hostResolverRules = process.env.CHROME_HOST_RESOLVER_RULES;
 
 const browser = await chromium.launch({
   executablePath: chromePath,
   headless: true,
+  args: hostResolverRules ? [`--host-resolver-rules=${hostResolverRules}`] : [],
 });
 
 try {

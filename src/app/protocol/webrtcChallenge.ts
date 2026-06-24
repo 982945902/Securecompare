@@ -355,7 +355,7 @@ async function loadIceServers(): Promise<RTCIceServer[]> {
   return fallbackIceServers;
 }
 
-function getRealtimeServiceWebSocketBaseUrl(): string {
+export function getRealtimeServiceWebSocketBaseUrl(): string {
   const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
   const configured = env?.VITE_SIGNALING_URL;
   if (configured) {
@@ -363,16 +363,23 @@ function getRealtimeServiceWebSocketBaseUrl(): string {
   }
 
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.hostname}:8787`;
+  return `${protocol}//${getRealtimeServiceHost(window.location)}`;
 }
 
-function getRealtimeServiceHttpBaseUrl(): string {
+export function getRealtimeServiceHttpBaseUrl(): string {
   const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
   const configured = env?.VITE_ICE_SERVERS_URL ?? env?.VITE_SIGNALING_URL;
   if (configured) {
     return configured.replace(/\/$/, '').replace(/^ws:/, 'http:').replace(/^wss:/, 'https:');
   }
-  return `${window.location.protocol}//${window.location.hostname}:8787`;
+  return `${window.location.protocol}//${getRealtimeServiceHost(window.location)}`;
+}
+
+function getRealtimeServiceHost(location: Location): string {
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    return `${location.hostname}:8787`;
+  }
+  return location.host;
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
