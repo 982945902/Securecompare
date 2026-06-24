@@ -71,7 +71,14 @@ function leaderboardBaseUrl(): string {
   if (configured) {
     return configured.replace(/\/$/, '');
   }
-  return `${window.location.protocol}//${window.location.hostname}:8787`;
+  return `${window.location.protocol}//${leaderboardHost(window.location)}`;
+}
+
+function leaderboardHost(location: Location): string {
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    return `${location.hostname}:8787`;
+  }
+  return location.host;
 }
 
 function valueBitsForCategory(category: Category): number {

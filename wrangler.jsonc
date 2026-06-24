@@ -8,13 +8,17 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/ws*", "/api/*", "/healthz"]
+    "run_worker_first": ["/ws*", "/api/*", "/leaderboard*", "/healthz"]
   },
   "durable_objects": {
     "bindings": [
       {
         "name": "INVITE_ROOMS",
         "class_name": "InviteRoom"
+      },
+      {
+        "name": "LEADERBOARDS",
+        "class_name": "LeaderboardBoard"
       }
     ]
   },
@@ -22,6 +26,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["InviteRoom"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["LeaderboardBoard"]
     }
   ],
   "observability": {
