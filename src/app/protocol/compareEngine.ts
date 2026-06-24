@@ -21,11 +21,11 @@ type PlaintextPrototypeMessage = {
 export const plaintextPrototypeEngine: CompareProtocolEngine = {
   info: {
     id: 'plaintext-prototype-v1',
-    label: 'WebRTC 原型通道',
+    label: '明文原型通道',
     mpcReady: false,
     peerInputTransport: 'plaintext-datachannel',
     notice:
-      '当前版本已接入 WebRTC DataChannel，但比较输入仍用于开发验证；真正双端 MPC 引擎接入前，不应视为生产级隐私比较。',
+      '当前原型会直接交换比较输入，仅用于开发验证；真正双端 MPC 引擎接入前，不应视为生产级隐私比较。',
   },
   run: async ({ myValue, transport }) => {
     const encoder = new TextEncoder();

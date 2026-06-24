@@ -62,7 +62,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
         }, 400);
       }
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'WebRTC 连接失败');
+      setError(nextError instanceof Error ? nextError.message : '房间连接失败');
     } finally {
       setIsConnecting(false);
     }
@@ -152,7 +152,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
                 className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isConnecting && <Loader2 size={18} className="animate-spin" />}
-                {isConnecting ? '正在建立 WebRTC 连接...' : '接受挑战 ⚔️'}
+                {isConnecting ? '正在进入服务端房间...' : '接受挑战 ⚔️'}
               </button>
             </form>
           </motion.div>
@@ -201,7 +201,7 @@ export function InviteAccept({ token, onClearChallenge }: Props) {
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6 text-center text-sm text-gray-500">
-                    当前结果来自 mpz wasm 双端消息泵；DataChannel 只承载协议字节，不直接发送双方输入。
+                    当前结果来自 mpz wasm 双端消息泵；房间通道只转发协议字节，不直接发送双方输入。
                   </div>
 
                   <button

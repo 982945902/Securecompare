@@ -67,7 +67,7 @@ These are non-negotiable design rules — not features, but foundations:
 | The gap between values | ❌ Never shown |
 | Your raw data sent to a server | ❌ Never happens |
 
-> **Private comparison happens in the browsers.** The signaling server is only used for peer discovery and WebRTC negotiation; it does not receive either player's raw value.
+> **Private comparison happens in the browsers.** By default, the room server only forwards protocol bytes over WebSocket; it does not receive either player's raw value.
 
 ---
 
@@ -86,18 +86,18 @@ The expected leakage is intentionally small:
 | Challenger raw value | Hidden from accepter and server |
 | Accepter raw value | Hidden from challenger and server |
 | Final comparison result | Revealed to both players |
-| WebRTC metadata | Visible to the browser/network stack |
-| Signaling messages | Offer / answer / ICE only |
+| Transport metadata | Visible to the browser/network stack and room server |
+| Room messages | Room presence and MPC protocol bytes only |
 
 ![Security boundary diagram](./docs/diagrams/security-boundary.svg)
 
 ### 2. Invite PK Protocol
 
-Invite PK is split into two planes. The signaling plane only helps the browsers establish a peer-to-peer channel. The comparison plane runs between the two browsers over a WebRTC DataChannel.
+Invite PK is split into two planes. The room plane keeps both browsers connected and forwards opaque protocol bytes over WebSocket by default. The comparison plane still runs between the two browsers: the server relays messages but does not evaluate the comparison or receive raw inputs.
 
 ![Invite PK protocol diagram](./docs/diagrams/invite-pk-protocol.svg)
 
-In the intended protocol, the challenge token contains a category id and a random room id. It does **not** contain either player's raw value. Once both pages are open, the two browser clients exchange MPC protocol messages directly.
+In the intended protocol, the challenge token contains a category id and a random room id. It does **not** contain either player's raw value. Once both pages are open, the two browser clients exchange MPC protocol messages through the room transport. WebRTC DataChannel remains available as an optional transport by setting `VITE_INVITE_TRANSPORT=webrtc`.
 
 ### 3. MPC Compare Pipeline
 
@@ -119,7 +119,7 @@ Win / Lose / Draw
 
 ![MPC compare pipeline diagram](./docs/diagrams/mpc-compare-pipeline.svg)
 
-The important design property is that WebRTC carries protocol messages, not JSON payloads containing the original values.
+The important design property is that the transport carries protocol messages, not JSON payloads containing the original values.
 
 ---
 
@@ -142,7 +142,7 @@ Styling        Tailwind CSS v4
 Animation      Motion (formerly Framer Motion)
 Icons          Lucide React
 Confetti FX    canvas-confetti
-Privacy Layer  WebRTC DataChannel + mpz wasm + OT
+Privacy Layer  WebSocket room relay by default, optional WebRTC DataChannel + mpz wasm + OT
 Build Tool     Vite
 Package Mgr    pnpm
 ```
@@ -159,8 +159,8 @@ https://yourapp.com/#challenge=eyJjIjoic2FsYXJ5IiwiciI6InJvb20taWQifQ
 
 **Why this is private:**
 - The invite token does **not** contain either player's value
-- The signaling service relays only WebRTC negotiation messages
-- The comparison runs over a browser-to-browser DataChannel
+- The room service relays only presence and MPC protocol bytes
+- The comparison runs in the two browsers; the server never receives raw values
 - The result screen shows only Win / Lose / Draw — no raw values on either side
 
 ---
@@ -174,6 +174,38 @@ pnpm install
 # Start the dev server
 pnpm dev
 ```
+
+### Invite Transport Configuration
+
+Invite PK defaults to the service-side WebSocket room relay, which avoids STUN/TURN/NAT issues:
+
+```bash
+VITE_INVITE_TRANSPORT=websocket
+```
+
+WebRTC DataChannel can still be enabled explicitly:
+
+```bash
+VITE_INVITE_TRANSPORT=webrtc
+```
+
+When WebRTC mode is enabled, public STUN can work on simple networks, but stricter NATs and enterprise firewalls often need TURN relay credentials.
+
+The signaling service exposes `GET /api/ice-servers`. By default it returns Cloudflare STUN:
+
+```json
+{ "iceServers": [{ "urls": "stun:stun.cloudflare.com:3478" }] }
+```
+
+For production, create a Cloudflare Realtime TURN key and configure these environment variables on the signaling service:
+
+```bash
+CLOUDFLARE_TURN_KEY_ID=...
+CLOUDFLARE_TURN_KEY_API_TOKEN=...
+TURN_CREDENTIAL_TTL_SECONDS=86400
+```
+
+The TURN key API token must stay server-side. The browser only receives short-lived ICE server credentials from `/api/ice-servers`.
 
 ---
 

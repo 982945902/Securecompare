@@ -6,7 +6,7 @@ import {
 } from './challengeToken';
 
 describe('challenge tokens', () => {
-  it('encodes category and room without exposing the private value or WebRTC offer', () => {
+  it('encodes category and room without exposing the private value or transport metadata', () => {
     const challenge: ChallengeLink = {
       categoryId: 'salary',
       roomId: 'room-123',

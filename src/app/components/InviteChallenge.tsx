@@ -19,7 +19,7 @@ export function InviteChallenge({ category, value, onBack }: Props) {
   const engineInfo = mpzProtocolEngine.info;
   const [copied, setCopied] = useState(false);
   const [link, setLink] = useState('');
-  const [status, setStatus] = useState('正在创建 WebRTC 房间...');
+  const [status, setStatus] = useState('正在创建服务端房间...');
   const [error, setError] = useState('');
   const [result, setResult] = useState<CompareOutcome | null>(null);
   const sessionRef = useRef<InviteChallengeSession | null>(null);
@@ -41,11 +41,11 @@ export function InviteChallenge({ category, value, onBack }: Props) {
       .then((nextResult) => {
         if (!active || !nextResult) return;
         setResult(nextResult);
-        setStatus(engineInfo.mpcReady ? 'MPC 比较完成' : 'WebRTC 比较原型完成');
+        setStatus(engineInfo.mpcReady ? 'MPC 比较完成' : '匿名比较完成');
       })
       .catch((nextError) => {
         if (!active) return;
-        setError(nextError instanceof Error ? nextError.message : 'WebRTC 连接失败');
+        setError(nextError instanceof Error ? nextError.message : '房间连接失败');
         setStatus('连接失败');
       });
 
@@ -97,7 +97,7 @@ export function InviteChallenge({ category, value, onBack }: Props) {
         </div>
         <h2 className="text-3xl mb-2 text-gray-800">挑战链接已生成</h2>
         <p className="text-gray-500">
-          发送链接给好友。链接只包含房间号，握手由 signaling 转发，双方通过 WebRTC DataChannel 连接。
+          发送链接给好友。链接只包含房间号，双方通过服务端 WebSocket 房间转发协议消息。
         </p>
       </div>
 

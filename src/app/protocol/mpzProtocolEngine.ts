@@ -23,7 +23,7 @@ export const mpzProtocolEngine: CompareProtocolEngine = {
     mpcReady: true,
     peerInputTransport: 'mpc-messages',
     notice:
-      '邀请 PK 已接入 mpz wasm 双端消息泵：DataChannel 只交换协议字节，不直接发送双方输入值；OT 栈使用 Chou-Orlandi base OT + KOS RCOT extension + DerandCOT。',
+      '邀请 PK 已接入 mpz wasm 双端消息泵：房间通道只交换协议字节，不直接发送双方输入值；OT 栈使用 Chou-Orlandi base OT + KOS RCOT extension + DerandCOT。',
   },
   run: async (input) => runMpzCompare(input),
 };
